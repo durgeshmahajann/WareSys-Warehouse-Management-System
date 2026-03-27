@@ -590,9 +590,9 @@ tbody tr:last-child td { border-bottom: none; }
         <div class="card">
           <div class="card-header"><div class="card-title">🏗 Warehouse Utilization</div><div class="card-action" onclick="navTo('warehouses')">Manage →</div></div>
           <div class="warehouse-map">
-            <div class="wh-node"><div class="wh-node-name">Warehouse 1</div><div class="wh-node-loc">Mumbai North</div><div class="wh-node-stat">82%</div><div class="wh-node-sub">1,240 / 1,512 bins</div><div class="wh-util"><div class="wh-util-bar"><div class="wh-util-fill" style="width:82%;background:var(--accent)"></div></div></div></div>
-            <div class="wh-node"><div class="wh-node-name">Warehouse 2</div><div class="wh-node-loc">Pune Central</div><div class="wh-node-stat">54%</div><div class="wh-node-sub">648 / 1,200 bins</div><div class="wh-util"><div class="wh-util-bar"><div class="wh-util-fill" style="width:54%;background:var(--accent4)"></div></div></div></div>
-            <div class="wh-node"><div class="wh-node-name">Warehouse 3</div><div class="wh-node-loc">Nashik Depot</div><div class="wh-node-stat">91%</div><div class="wh-node-sub">910 / 1,000 bins</div><div class="wh-util"><div class="wh-util-bar"><div class="wh-util-fill" style="width:91%;background:var(--accent3)"></div></div></div></div>
+            <div class="wh-node"><div class="wh-node-name">Warehouse 1</div><div class="wh-node-loc">Mumbai North</div><div class="wh-node-stat">82%</div><div class="wh-node-sub">1,240 / 1,512 units</div><div class="wh-util"><div class="wh-util-bar"><div class="wh-util-fill" style="width:82%;background:var(--accent)"></div></div></div></div>
+            <div class="wh-node"><div class="wh-node-name">Warehouse 2</div><div class="wh-node-loc">Pune Central</div><div class="wh-node-stat">54%</div><div class="wh-node-sub">648 / 1,200 units</div><div class="wh-util"><div class="wh-util-bar"><div class="wh-util-fill" style="width:54%;background:var(--accent4)"></div></div></div></div>
+            <div class="wh-node"><div class="wh-node-name">Warehouse 3</div><div class="wh-node-loc">Nashik Depot</div><div class="wh-node-stat">91%</div><div class="wh-node-sub">910 / 1,000 units</div><div class="wh-util"><div class="wh-util-bar"><div class="wh-util-fill" style="width:91%;background:var(--accent3)"></div></div></div></div>
           </div>
         </div>
       </div>
@@ -1316,8 +1316,8 @@ function showToast(msg) {
 }
 
 // ── UTILIZATION ENGINE ───────────────────────────────────
-// Each inventory row with qty > 0 = 1 occupied bin slot
-// Utilization % = occupied bins / total bins (from warehouse table)
+// Utilization % = total inventory units in warehouse / total bin capacity
+// If a warehouse has 1000 bins and 1000 units stocked → 100%
 
 function recalcUtilization() {
   const whData = {};
@@ -1326,17 +1326,17 @@ function recalcUtilization() {
   document.querySelectorAll('#wh-table tbody tr').forEach(row => {
     const nameEl = row.cells[0]?.querySelector('strong');
     if (!nameEl) return;
-    const whName   = nameEl.textContent.trim();
-    const whCode   = 'WH' + whName.replace(/\D/g, '');
+    const whName    = nameEl.textContent.trim();
+    const whCode    = 'WH' + whName.replace(/\D/g, '');
     const totalBins = parseInt((row.dataset.bins || row.cells[4]?.textContent || '0').replace(/,/g,'')) || 1;
     whData[whCode] = { name: whName, totalBins, occupied: 0, row };
   });
 
-  // Count occupied bins from inventory table
+  // Sum total inventory quantity per warehouse (units = bins used)
   document.querySelectorAll('#page-inventory tbody tr').forEach(invRow => {
     const whCode = (invRow.dataset.wh || invRow.cells[2]?.textContent || '').trim();
     const qty    = parseInt((invRow.cells[5]?.textContent || '0').replace(/,/g,'')) || 0;
-    if (whData[whCode] && qty > 0) whData[whCode].occupied++;
+    if (whData[whCode] && qty > 0) whData[whCode].occupied += qty;
   });
 
   // Apply to warehouse table rows + dashboard nodes
@@ -1365,7 +1365,7 @@ function recalcUtilization() {
       const sub  = node.querySelector('.wh-node-sub');
       const fill = node.querySelector('.wh-util-fill');
       if (stat) { stat.textContent = util + '%'; stat.style.color = barColor; }
-      if (sub)  sub.textContent = `${d.occupied} / ${d.totalBins.toLocaleString()} bins used`;
+      if (sub)  sub.textContent = `${d.occupied.toLocaleString()} / ${d.totalBins.toLocaleString()} units`;
       if (fill) { fill.style.width = util + '%'; fill.style.background = barColor; }
     });
   });
@@ -1540,7 +1540,7 @@ function confirmAddWarehouse() {
       <div class="wh-node-name">${name}</div>
       <div class="wh-node-loc">${location}</div>
       <div class="wh-node-stat" style="color:var(--accent4)">0%</div>
-      <div class="wh-node-sub">0 / ${totalBins.toLocaleString()} bins</div>
+      <div class="wh-node-sub">0 / ${totalBins.toLocaleString()} units</div>
       <div class="wh-util"><div class="wh-util-bar"><div class="wh-util-fill" style="width:0%;background:var(--accent4)"></div></div></div>
     `;
     whMap.appendChild(node);
@@ -1722,6 +1722,37 @@ function confirmStockIn() {
 
   const warehouse = document.getElementById('si-warehouse').value;
   const bin       = document.getElementById('si-bin').value || '—';
+
+  // ── CAPACITY CHECK ────────────────────────────────────────
+  // Find the warehouse row and get its total bin capacity
+  const whCode = warehouse.replace('Warehouse ', 'WH').replace(/\s/g, '');
+  let totalBins = 0;
+  document.querySelectorAll('#wh-table tbody tr').forEach(row => {
+    const nameEl = row.cells[0]?.querySelector('strong');
+    if (!nameEl) return;
+    const rowCode = 'WH' + nameEl.textContent.replace(/\D/g, '');
+    if (rowCode === whCode) {
+      totalBins = parseInt((row.dataset.bins || row.cells[4]?.textContent || '0').replace(/,/g,'')) || 0;
+    }
+  });
+
+  // Sum units already in this warehouse
+  let currentUnits = 0;
+  document.querySelectorAll('#page-inventory tbody tr').forEach(invRow => {
+    const invWh = (invRow.dataset.wh || invRow.cells[2]?.textContent || '').trim();
+    const invQty = parseInt((invRow.cells[5]?.textContent || '0').replace(/,/g,'')) || 0;
+    if (invWh === whCode) currentUnits += invQty;
+  });
+
+  const availableSpace = totalBins - currentUnits;
+  if (totalBins > 0 && qty > availableSpace) {
+    errEl.textContent = availableSpace <= 0
+      ? `🚫 "${warehouse}" is full — 0 units of space remaining (capacity: ${totalBins.toLocaleString()} units).`
+      : `🚫 Not enough space in "${warehouse}" — only ${availableSpace.toLocaleString()} units of space remaining (capacity: ${totalBins.toLocaleString()}, used: ${currentUnits.toLocaleString()}).`;
+    errEl.style.display = 'block';
+    return;
+  }
+  // ─────────────────────────────────────────────────────────
 
   // Update inventory table quantity
   const invRows = document.querySelectorAll('#page-inventory tbody tr');
