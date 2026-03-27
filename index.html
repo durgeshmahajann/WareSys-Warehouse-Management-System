@@ -1502,6 +1502,18 @@ function confirmAddWarehouse() {
     errEl.textContent = '⚠ Sections, racks, and bins must each be at least 1.'; errEl.style.display = 'block'; return;
   }
 
+  // Duplicate name check
+  const duplicate = Array.from(document.querySelectorAll('#wh-table tbody tr')).some(row => {
+    const nameEl = row.cells[0]?.querySelector('strong');
+    return nameEl && nameEl.textContent.trim().toLowerCase() === name.toLowerCase();
+  });
+  if (duplicate) {
+    errEl.textContent = `🚫 A warehouse named "${name}" already exists. Please use a different name.`;
+    errEl.style.display = 'block';
+    document.getElementById('wh-name').focus();
+    return;
+  }
+
   const totalBins  = sections * racks * bins;
   const totalRacks = sections * racks;
   const whNum      = document.querySelectorAll('#page-warehouses tbody tr').length + 1;
