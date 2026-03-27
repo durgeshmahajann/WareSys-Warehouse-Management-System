@@ -217,7 +217,7 @@ body {
 /* TOPBAR */
 .topbar {
   padding: 16px 28px 13px; border-bottom: 1px solid var(--border);
-  display: flex; align-items: center; gap: 14px;
+  display: flex; align-items: center; gap: 10px;
   background: var(--panel); position: sticky; top: 0; z-index: 5; box-shadow: var(--shadow);
 }
 .topbar-title { font-size: 17px; font-weight: 800; letter-spacing: -0.5px; flex: 1; color: var(--text); }
@@ -241,6 +241,8 @@ body {
 .btn-accent:hover { background: var(--accent-h); transform: translateY(-1px); box-shadow: 0 4px 10px rgba(37,99,235,0.25); }
 .btn-ghost { background: var(--panel); color: var(--text2); border: 1.5px solid var(--border); }
 .btn-ghost:hover { border-color: var(--accent); color: var(--accent); background: #eff6ff; }
+.btn-danger { background: var(--panel); color: var(--accent3); border: 1.5px solid #fecaca; }
+.btn-danger:hover { background: #fef2f2; border-color: var(--accent3); transform: translateY(-1px); box-shadow: 0 4px 10px rgba(239,68,68,0.15); }
 
 /* CONTENT */
 .content { padding: 24px 28px; flex: 1; }
@@ -276,6 +278,7 @@ body {
   display: flex; align-items: center; gap: 7px; box-shadow: var(--shadow);
 }
 .qa-btn:hover { background: #eff6ff; border-color: var(--accent); color: var(--accent); }
+.qa-btn.qa-danger:hover { background: #fef2f2; border-color: var(--accent3); color: var(--accent3); }
 .qa-btn .dot { width: 8px; height: 8px; border-radius: 50%; }
 
 /* GRID */
@@ -283,6 +286,8 @@ body {
 
 /* CARD */
 .card { background: var(--panel); border: 1.5px solid var(--border); border-radius: 12px; overflow: hidden; box-shadow: var(--shadow); }
+.table-wrap { overflow-x: auto; width: 100%; }
+.table-wrap table { min-width: 700px; }
 .card-header { padding: 13px 18px; border-bottom: 1.5px solid var(--border); display: flex; align-items: center; justify-content: space-between; background: var(--panel2); }
 .card-title  { font-size: 13px; font-weight: 700; color: var(--text); }
 .card-action { font-size: 11px; color: var(--accent); cursor: pointer; font-family: var(--mono); font-weight: 600; }
@@ -359,6 +364,63 @@ tbody tr:last-child td { border-bottom: none; }
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .modal-actions { display: flex; gap: 10px; margin-top: 22px; justify-content: flex-end; }
 
+/* Stock Out modal accent */
+.modal.modal-danger .modal-title { color: var(--accent3); }
+.modal.modal-danger .modal-sub { color: #fca5a5; }
+.btn-confirm-danger {
+  background: var(--accent3); color: #fff; border: none;
+  padding: 8px 16px; border-radius: 8px; font-family: var(--syne);
+  font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.13s;
+  display: flex; align-items: center; gap: 6px;
+}
+.btn-confirm-danger:hover { background: #dc2626; transform: translateY(-1px); box-shadow: 0 4px 10px rgba(239,68,68,0.3); }
+
+/* ROW STOCK OUT BUTTON */
+.row-out-btn {
+  padding: 5px 11px; border-radius: 6px;
+  border: 1.5px solid #fecaca; background: #fff5f5;
+  color: var(--accent3); font-family: var(--syne);
+  font-size: 11px; font-weight: 700; cursor: pointer;
+  transition: all 0.13s; white-space: nowrap;
+  display: inline-flex; align-items: center; gap: 4px;
+}
+.row-out-btn:hover {
+  background: var(--accent3); color: #fff;
+  border-color: var(--accent3);
+  box-shadow: 0 2px 8px rgba(239,68,68,0.25);
+  transform: translateY(-1px);
+}
+
+/* ROW EDIT BUTTON */
+.row-edit-btn {
+  padding: 5px 11px; border-radius: 6px;
+  border: 1.5px solid var(--border); background: var(--panel2);
+  color: var(--text2); font-family: var(--syne);
+  font-size: 11px; font-weight: 700; cursor: pointer;
+  transition: all 0.13s; white-space: nowrap;
+  display: inline-flex; align-items: center; gap: 4px;
+}
+.row-edit-btn:hover {
+  background: #eff6ff; border-color: var(--accent); color: var(--accent);
+  box-shadow: 0 2px 8px rgba(37,99,235,0.12); transform: translateY(-1px);
+}
+
+/* STEPPER CONTROL */
+.stepper { display: flex; align-items: center; gap: 0; border: 1.5px solid var(--border); border-radius: 7px; overflow: hidden; }
+.stepper-btn {
+  width: 34px; height: 36px; border: none; background: var(--panel2);
+  font-size: 16px; font-weight: 700; color: var(--text2); cursor: pointer;
+  transition: background 0.13s, color 0.13s; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+.stepper-btn:hover { background: var(--accent); color: #fff; }
+.stepper-val {
+  flex: 1; text-align: center; font-family: var(--mono); font-size: 14px;
+  font-weight: 700; color: var(--text); padding: 0 8px;
+  border: none; outline: none; background: var(--panel); min-width: 50px;
+  height: 36px;
+}
+
 /* SETTINGS */
 .settings-card { background: var(--panel); border: 1.5px solid var(--border); border-radius: 12px; overflow: hidden; box-shadow: var(--shadow); max-width: 500px; }
 .settings-body { padding: 20px 22px; }
@@ -422,9 +484,9 @@ tbody tr:last-child td { border-bottom: none; }
       <div class="login-divider">demo credentials</div>
       <div class="demo-creds">
         <div class="demo-creds-title">🔑 QUICK LOGIN CREDENTIALS</div>
-        <div class="demo-creds-row">Admin&nbsp;&nbsp;→ <span>admin@waresys.com</span> / <span>admin123</span></div>
-        <div class="demo-creds-row">Staff&nbsp;&nbsp;&nbsp;→ <span>staff@waresys.com</span> / <span>staff123</span></div>
-        <div class="demo-creds-row">Viewer → <span>view@waresys.com</span> &nbsp;/ <span>view123</span></div>
+        <div class="demo-creds-row">Admin&nbsp;&nbsp;→ <span><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="19787d747077596e786b7c6a606a377a7674">[email&#160;protected]</a></span> / <span>admin123</span></div>
+        <div class="demo-creds-row">Staff&nbsp;&nbsp;&nbsp;→ <span><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="f68582979090b681978493858f85d895999b">[email&#160;protected]</a></span> / <span>staff123</span></div>
+        <div class="demo-creds-row">Viewer → <span><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="84f2ede1f3c4f3e5f6e1f7fdf7aae7ebe9">[email&#160;protected]</a></span> &nbsp;/ <span>view123</span></div>
       </div>
     </div>
   </div>
@@ -467,6 +529,8 @@ tbody tr:last-child td { border-bottom: none; }
     <div class="topbar">
       <div class="topbar-title" id="page-title">Warehouse <span>Dashboard</span></div>
       <div class="search-box"><span style="color:var(--muted)">⌕</span><input type="text" placeholder="Search products, SKU..."/></div>
+      <!-- ✅ Stock Out button added to topbar -->
+      <button class="btn btn-danger" onclick="openModal('stockOut')">📤 Stock Out</button>
       <button class="btn btn-ghost" onclick="openModal('stockIn')">+ Stock In</button>
       <button class="btn btn-accent" onclick="openModal('addProduct')">+ Add Product</button>
     </div>
@@ -482,7 +546,8 @@ tbody tr:last-child td { border-bottom: none; }
       <div class="quick-actions">
         <button class="qa-btn" onclick="openModal('addProduct')"><div class="dot" style="background:var(--accent4)"></div> Add Product</button>
         <button class="qa-btn" onclick="openModal('stockIn')"><div class="dot" style="background:var(--accent2)"></div> Stock In</button>
-        <button class="qa-btn" onclick="openModal('stockOut')"><div class="dot" style="background:var(--accent3)"></div> Stock Out</button>
+        <!-- ✅ Stock Out in quick actions -->
+        <button class="qa-btn qa-danger" onclick="openModal('stockOut')"><div class="dot" style="background:var(--accent3)"></div> Stock Out</button>
         <button class="qa-btn" onclick="openModal('transfer')"><div class="dot" style="background:var(--accent5)"></div> Transfer Stock</button>
         <button class="qa-btn" onclick="navTo('reports')"><div class="dot" style="background:var(--muted)"></div> View Reports</button>
       </div>
@@ -538,14 +603,31 @@ tbody tr:last-child td { border-bottom: none; }
       <div class="section-title">🏗 Warehouses</div>
       <div style="margin-bottom:16px"><button class="btn btn-accent" onclick="openModal('addWarehouse')">+ Add Warehouse</button></div>
       <div class="card">
-        <table>
-          <thead><tr><th>Name</th><th>Location</th><th>Sections</th><th>Racks</th><th>Bins</th><th>Utilization</th><th>Status</th></tr></thead>
+        <div class="table-wrap">
+        <table id="wh-table">
+          <thead><tr><th>Name</th><th>Location</th><th>Sections</th><th>Racks</th><th>Bins</th><th>Utilization</th><th>Status</th><th>Edit</th></tr></thead>
           <tbody>
-            <tr><td><strong>Warehouse 1</strong></td><td class="sku">Mumbai North</td><td>6</td><td>24</td><td>1,512</td><td><div class="qty-bar-wrap"><div class="qty-bar" style="max-width:80px"><div class="qty-bar-fill" style="width:82%;background:var(--accent)"></div></div><span class="sku">82%</span></div></td><td><span class="badge badge-ok">ACTIVE</span></td></tr>
-            <tr><td><strong>Warehouse 2</strong></td><td class="sku">Pune Central</td><td>4</td><td>18</td><td>1,200</td><td><div class="qty-bar-wrap"><div class="qty-bar" style="max-width:80px"><div class="qty-bar-fill" style="width:54%;background:var(--accent4)"></div></div><span class="sku">54%</span></div></td><td><span class="badge badge-ok">ACTIVE</span></td></tr>
-            <tr><td><strong>Warehouse 3</strong></td><td class="sku">Nashik Depot</td><td>3</td><td>12</td><td>1,000</td><td><div class="qty-bar-wrap"><div class="qty-bar" style="max-width:80px"><div class="qty-bar-fill" style="width:91%;background:var(--accent3)"></div></div><span class="sku">91%</span></div></td><td><span class="badge badge-warn">NEAR FULL</span></td></tr>
+            <tr data-sections="6" data-racks="24" data-bins="1512" data-util="82">
+              <td><strong>Warehouse 1</strong></td><td class="sku">Mumbai North</td><td>6</td><td>24</td><td>1,512</td>
+              <td><div class="qty-bar-wrap"><div class="qty-bar" style="max-width:80px"><div class="qty-bar-fill" style="width:82%;background:var(--accent)"></div></div><span class="sku">82%</span></div></td>
+              <td><span class="badge badge-ok">ACTIVE</span></td>
+              <td><button class="row-edit-btn" onclick="openEditWarehouse(this)">✏ Edit</button></td>
+            </tr>
+            <tr data-sections="4" data-racks="18" data-bins="1200" data-util="54">
+              <td><strong>Warehouse 2</strong></td><td class="sku">Pune Central</td><td>4</td><td>18</td><td>1,200</td>
+              <td><div class="qty-bar-wrap"><div class="qty-bar" style="max-width:80px"><div class="qty-bar-fill" style="width:54%;background:var(--accent4)"></div></div><span class="sku">54%</span></div></td>
+              <td><span class="badge badge-ok">ACTIVE</span></td>
+              <td><button class="row-edit-btn" onclick="openEditWarehouse(this)">✏ Edit</button></td>
+            </tr>
+            <tr data-sections="3" data-racks="12" data-bins="1000" data-util="91">
+              <td><strong>Warehouse 3</strong></td><td class="sku">Nashik Depot</td><td>3</td><td>12</td><td>1,000</td>
+              <td><div class="qty-bar-wrap"><div class="qty-bar" style="max-width:80px"><div class="qty-bar-fill" style="width:91%;background:var(--accent3)"></div></div><span class="sku">91%</span></div></td>
+              <td><span class="badge badge-warn">NEAR FULL</span></td>
+              <td><button class="row-edit-btn" onclick="openEditWarehouse(this)">✏ Edit</button></td>
+            </tr>
           </tbody>
         </table>
+        </div>
       </div>
     </div>
 
@@ -575,19 +657,23 @@ tbody tr:last-child td { border-bottom: none; }
         <select class="filter-select"><option>All Warehouses</option><option>Warehouse 1</option><option>Warehouse 2</option><option>Warehouse 3</option></select>
         <select class="filter-select"><option>All Racks</option><option>Rack A</option><option>Rack B</option><option>Rack C</option><option>Rack D</option></select>
         <select class="filter-select"><option>All Status</option><option>OK</option><option>Low Stock</option><option>Overstock</option></select>
+        <!-- ✅ Stock Out shortcut in Inventory page -->
+        <button class="btn btn-danger" style="margin-left:auto" onclick="openModal('stockOut')">📤 Stock Out</button>
       </div>
       <div class="card">
+        <div class="table-wrap">
         <table>
-          <thead><tr><th>Product</th><th>SKU</th><th>Warehouse</th><th>Rack</th><th>Bin</th><th>Quantity</th><th>Status</th></tr></thead>
+          <thead><tr><th>Product</th><th>SKU</th><th>Warehouse</th><th>Rack</th><th>Bin</th><th>Quantity</th><th>Status</th><th>Stock Out</th></tr></thead>
           <tbody>
-            <tr><td><strong>Steel Bolt M10</strong></td><td class="sku">SKU-00421</td><td>WH1</td><td>Rack A</td><td>Bin 03</td><td>320</td><td><span class="badge badge-ok">OK</span></td></tr>
-            <tr><td><strong>Hex Nut M8</strong></td><td class="sku">SKU-00519</td><td>WH1</td><td>Rack B</td><td>Bin 07</td><td>18</td><td><span class="badge badge-low">LOW</span></td></tr>
-            <tr><td><strong>PVC Pipe 2in</strong></td><td class="sku">SKU-01023</td><td>WH2</td><td>Rack C</td><td>Bin 01</td><td>540</td><td><span class="badge badge-warn">OVER</span></td></tr>
-            <tr><td><strong>Cable Tie 30cm</strong></td><td class="sku">SKU-00872</td><td>WH1</td><td>Rack A</td><td>Bin 09</td><td>1,200</td><td><span class="badge badge-ok">OK</span></td></tr>
-            <tr><td><strong>Rubber Gasket A</strong></td><td class="sku">SKU-00334</td><td>WH3</td><td>Rack D</td><td>Bin 02</td><td>7</td><td><span class="badge badge-low">LOW</span></td></tr>
-            <tr><td><strong>Copper Elbow 45°</strong></td><td class="sku">SKU-00612</td><td>WH2</td><td>Rack A</td><td>Bin 05</td><td>95</td><td><span class="badge badge-ok">OK</span></td></tr>
+            <tr data-wh="WH1"><td><strong>Steel Bolt M10</strong></td><td class="sku">SKU-00421</td><td>WH1</td><td>Rack A</td><td>Bin 03</td><td>320</td><td><span class="badge badge-ok">OK</span></td><td><button class="row-out-btn" onclick="openStockOutFor('Steel Bolt M10','WH1 / Rack A / Bin 03')">📤 Stock Out</button></td></tr>
+            <tr data-wh="WH1"><td><strong>Hex Nut M8</strong></td><td class="sku">SKU-00519</td><td>WH1</td><td>Rack B</td><td>Bin 07</td><td>18</td><td><span class="badge badge-low">LOW</span></td><td><button class="row-out-btn" onclick="openStockOutFor('Hex Nut M8','WH1 / Rack B / Bin 07')">📤 Stock Out</button></td></tr>
+            <tr data-wh="WH2"><td><strong>PVC Pipe 2in</strong></td><td class="sku">SKU-01023</td><td>WH2</td><td>Rack C</td><td>Bin 01</td><td>540</td><td><span class="badge badge-warn">OVER</span></td><td><button class="row-out-btn" onclick="openStockOutFor('PVC Pipe 2in','WH2 / Rack C / Bin 01')">📤 Stock Out</button></td></tr>
+            <tr data-wh="WH1"><td><strong>Cable Tie 30cm</strong></td><td class="sku">SKU-00872</td><td>WH1</td><td>Rack A</td><td>Bin 09</td><td>1,200</td><td><span class="badge badge-ok">OK</span></td><td><button class="row-out-btn" onclick="openStockOutFor('Cable Tie 30cm','WH1 / Rack A / Bin 09')">📤 Stock Out</button></td></tr>
+            <tr data-wh="WH3"><td><strong>Rubber Gasket A</strong></td><td class="sku">SKU-00334</td><td>WH3</td><td>Rack D</td><td>Bin 02</td><td>7</td><td><span class="badge badge-low">LOW</span></td><td><button class="row-out-btn" onclick="openStockOutFor('Rubber Gasket A','WH3 / Rack D / Bin 02')">📤 Stock Out</button></td></tr>
+            <tr data-wh="WH2"><td><strong>Copper Elbow 45°</strong></td><td class="sku">SKU-00612</td><td>WH2</td><td>Rack A</td><td>Bin 05</td><td>95</td><td><span class="badge badge-ok">OK</span></td><td><button class="row-out-btn" onclick="openStockOutFor('Copper Elbow 45°','WH2 / Rack A / Bin 05')">📤 Stock Out</button></td></tr>
           </tbody>
         </table>
+        </div>
       </div>
     </div>
 
@@ -596,7 +682,8 @@ tbody tr:last-child td { border-bottom: none; }
       <div class="section-title">↕ Stock Movement</div>
       <div style="display:flex;gap:10px;margin-bottom:16px">
         <button class="btn btn-ghost" onclick="openModal('stockIn')">📥 Stock In</button>
-        <button class="btn btn-ghost" onclick="openModal('stockOut')">📤 Stock Out</button>
+        <!-- ✅ Stock Out in Movement page -->
+        <button class="btn btn-danger" onclick="openModal('stockOut')">📤 Stock Out</button>
         <button class="btn btn-accent" onclick="openModal('transfer')">🔁 Transfer</button>
       </div>
       <div class="card">
@@ -693,24 +780,187 @@ tbody tr:last-child td { border-bottom: none; }
     <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal('addProduct')">Cancel</button><button class="btn btn-accent" onclick="closeModal('addProduct')">Add Product</button></div>
   </div>
 </div>
+
 <div class="modal-overlay" id="modal-stockIn">
   <div class="modal">
-    <div class="modal-title">📥 Stock In</div><div class="modal-sub">INBOUND · FROM_SUPPLIER</div>
-    <div class="form-group"><label class="form-label">Supplier</label><select class="form-input"><option>BoltMart Pvt Ltd</option><option>MetalWorks Co.</option><option>SealPro Industries</option><option>PipeLine Corp</option></select></div>
-    <div class="form-row"><div class="form-group"><label class="form-label">Product</label><select class="form-input"><option>Steel Bolt M10</option><option>Hex Nut M8</option><option>PVC Pipe 2in</option><option>Cable Tie 30cm</option><option>Rubber Gasket A</option></select></div><div class="form-group"><label class="form-label">Quantity</label><input class="form-input" type="number" placeholder="0"/></div></div>
-    <div class="form-row"><div class="form-group"><label class="form-label">Warehouse</label><select class="form-input"><option>Warehouse 1</option><option>Warehouse 2</option><option>Warehouse 3</option></select></div><div class="form-group"><label class="form-label">Bin</label><input class="form-input" placeholder="R-A / B-01" style="font-family:var(--mono)"/></div></div>
-    <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal('stockIn')">Cancel</button><button class="btn btn-accent" onclick="closeModal('stockIn')">Confirm Stock In</button></div>
+    <div class="modal-title">📥 Stock In</div>
+    <div class="modal-sub">INBOUND · FROM_SUPPLIER</div>
+
+    <!-- Supplier row with inline Add Supplier toggle -->
+    <div class="form-group" id="si-supplier-select-group">
+      <label class="form-label" style="display:flex;align-items:center;justify-content:space-between;">
+        Supplier
+        <span id="si-add-supplier-link" onclick="toggleAddSupplier(true)" style="font-size:10px;color:var(--accent);cursor:pointer;font-weight:700;text-decoration:none;letter-spacing:0.5px;">＋ Add New Supplier</span>
+      </label>
+      <select class="form-input" id="si-supplier-select">
+        <option value="">— Select Supplier —</option>
+        <option>BoltMart Pvt Ltd</option>
+        <option>MetalWorks Co.</option>
+        <option>SealPro Industries</option>
+        <option>PipeLine Corp</option>
+      </select>
+    </div>
+
+    <!-- Add New Supplier inline form (hidden by default) -->
+    <div id="si-new-supplier-group" style="display:none;background:var(--panel2);border:1.5px solid var(--border);border-radius:9px;padding:14px 14px 10px;margin-bottom:14px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+        <span style="font-size:11px;font-weight:700;color:var(--accent);font-family:var(--mono);letter-spacing:1px;">NEW SUPPLIER</span>
+        <span onclick="toggleAddSupplier(false)" style="font-size:11px;color:var(--muted);cursor:pointer;font-weight:600;">✕ Cancel</span>
+      </div>
+      <div class="form-row">
+        <div class="form-group" style="margin-bottom:10px">
+          <label class="form-label">Supplier Name</label>
+          <input class="form-input" id="si-new-name" placeholder="e.g. FastFix Industries"/>
+        </div>
+        <div class="form-group" style="margin-bottom:10px">
+          <label class="form-label">Contact Person</label>
+          <input class="form-input" id="si-new-contact" placeholder="e.g. Rahul Sharma"/>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group" style="margin-bottom:10px">
+          <label class="form-label">Phone</label>
+          <input class="form-input" id="si-new-phone" placeholder="+91 98765 43210" style="font-family:var(--mono)"/>
+        </div>
+        <div class="form-group" style="margin-bottom:10px">
+          <label class="form-label">Email</label>
+          <input class="form-input" id="si-new-email" placeholder="supplier@email.com" style="font-family:var(--mono)"/>
+        </div>
+      </div>
+      <div class="form-group" style="margin-bottom:10px">
+        <label class="form-label">City / Region</label>
+        <input class="form-input" id="si-new-city" placeholder="e.g. Mumbai"/>
+      </div>
+      <button class="btn btn-accent" style="width:100%;justify-content:center;" onclick="saveNewSupplier()">＋ Save &amp; Select Supplier</button>
+    </div>
+
+    <!-- Product row with inline Add Product toggle -->
+    <div class="form-group" id="si-product-select-group">
+      <label class="form-label" style="display:flex;align-items:center;justify-content:space-between;">
+        Product
+        <span onclick="toggleAddProduct(true)" style="font-size:10px;color:var(--accent);cursor:pointer;font-weight:700;letter-spacing:0.5px;">＋ Add New Product</span>
+      </label>
+      <select class="form-input" id="si-product">
+        <option value="">— Select Product —</option>
+        <option>Steel Bolt M10</option>
+        <option>Hex Nut M8</option>
+        <option>PVC Pipe 2in</option>
+        <option>Cable Tie 30cm</option>
+        <option>Rubber Gasket A</option>
+        <option>Copper Elbow 45°</option>
+      </select>
+    </div>
+
+    <!-- Add New Product inline form (hidden by default) -->
+    <div id="si-new-product-group" style="display:none;background:var(--panel2);border:1.5px solid var(--border);border-radius:9px;padding:14px 14px 10px;margin-bottom:14px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+        <span style="font-size:11px;font-weight:700;color:var(--accent);font-family:var(--mono);letter-spacing:1px;">NEW PRODUCT</span>
+        <span onclick="toggleAddProduct(false)" style="font-size:11px;color:var(--muted);cursor:pointer;font-weight:600;">✕ Cancel</span>
+      </div>
+      <div class="form-row">
+        <div class="form-group" style="margin-bottom:10px">
+          <label class="form-label">Product Name</label>
+          <input class="form-input" id="si-new-product-name" placeholder="e.g. Steel Washer M6"/>
+        </div>
+        <div class="form-group" style="margin-bottom:10px">
+          <label class="form-label">SKU</label>
+          <input class="form-input" id="si-new-product-sku" placeholder="SKU-XXXXX" style="font-family:var(--mono)"/>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group" style="margin-bottom:10px">
+          <label class="form-label">Category</label>
+          <select class="form-input" id="si-new-product-category">
+            <option>Fasteners</option>
+            <option>Plumbing</option>
+            <option>Electrical</option>
+            <option>Seals</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin-bottom:10px">
+          <label class="form-label">Unit</label>
+          <input class="form-input" id="si-new-product-unit" placeholder="e.g. pcs, kg, m"/>
+        </div>
+      </div>
+      <div id="si-new-product-error" style="display:none;background:#fef2f2;border:1px solid #fecaca;border-radius:6px;padding:7px 11px;font-size:11px;color:var(--accent3);margin-bottom:8px;"></div>
+      <button class="btn btn-accent" style="width:100%;justify-content:center;" onclick="saveNewProduct()">＋ Save &amp; Select Product</button>
+    </div>
+
+    <div class="form-row" id="si-qty-row">
+      <div class="form-group">
+        <label class="form-label">Quantity</label>
+        <input class="form-input" id="si-qty" type="number" placeholder="0" min="1"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Bin Location</label>
+        <input class="form-input" id="si-bin" placeholder="R-A / B-01" style="font-family:var(--mono)"/>
+      </div>
+    </div>
+    <div class="form-group" id="si-warehouse-row">
+      <label class="form-label">Warehouse</label>
+      <select class="form-input" id="si-warehouse">
+        <option>Warehouse 1</option>
+        <option>Warehouse 2</option>
+        <option>Warehouse 3</option>
+      </select>
+    </div>
+    <div id="si-error" style="display:none;background:#fef2f2;border:1px solid #fecaca;border-radius:7px;padding:9px 13px;font-size:12px;color:var(--accent3);margin-top:4px;"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('stockIn')">Cancel</button>
+      <button class="btn btn-accent" onclick="confirmStockIn()">📥 Confirm Stock In</button>
+    </div>
   </div>
 </div>
+
+<!-- ✅ Stock Out Modal — enhanced with danger styling -->
 <div class="modal-overlay" id="modal-stockOut">
-  <div class="modal">
-    <div class="modal-title">📤 Stock Out</div><div class="modal-sub">OUTBOUND · DISPATCH</div>
-    <div class="form-row"><div class="form-group"><label class="form-label">Product</label><select class="form-input"><option>Steel Bolt M10</option><option>Hex Nut M8</option><option>PVC Pipe 2in</option><option>Cable Tie 30cm</option><option>Rubber Gasket A</option></select></div><div class="form-group"><label class="form-label">Quantity</label><input class="form-input" type="number" placeholder="0"/></div></div>
-    <div class="form-group"><label class="form-label">From Location</label><input class="form-input" placeholder="WH1 / R-A / B-03" style="font-family:var(--mono)"/></div>
-    <div class="form-group"><label class="form-label">Customer / Order Ref</label><input class="form-input" placeholder="Order #OUT-XXXX"/></div>
-    <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal('stockOut')">Cancel</button><button class="btn btn-accent" onclick="closeModal('stockOut')">Confirm Dispatch</button></div>
+  <div class="modal modal-danger">
+    <div class="modal-title">📤 Stock Out</div>
+    <div class="modal-sub" style="color:var(--muted)">OUTBOUND · DISPATCH_FROM_WAREHOUSE</div>
+    <div id="stockout-error" style="display:none;background:#fef2f2;border:1px solid #fecaca;border-radius:7px;padding:9px 13px;font-size:12px;color:var(--accent3);margin-bottom:12px;"></div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Product</label>
+        <select class="form-input" id="so-product">
+          <option>Steel Bolt M10</option>
+          <option>Hex Nut M8</option>
+          <option>PVC Pipe 2in</option>
+          <option>Cable Tie 30cm</option>
+          <option>Rubber Gasket A</option>
+          <option>Copper Elbow 45°</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Quantity</label>
+        <input class="form-input" id="so-qty" type="number" placeholder="0" min="1"/>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">From Location</label>
+      <input class="form-input" id="so-location" placeholder="e.g. WH1 / R-A / B-03" style="font-family:var(--mono)"/>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Customer / Recipient</label>
+        <input class="form-input" id="so-customer" placeholder="e.g. ABC Corp"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Order Reference</label>
+        <input class="form-input" id="so-ref" placeholder="OUT-XXXX" style="font-family:var(--mono)"/>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Reason / Notes</label>
+      <input class="form-input" id="so-notes" placeholder="e.g. Customer order, internal use..."/>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('stockOut')">Cancel</button>
+      <button class="btn-confirm-danger" onclick="confirmStockOut()">📤 Confirm Dispatch</button>
+    </div>
   </div>
 </div>
+
 <div class="modal-overlay" id="modal-transfer">
   <div class="modal">
     <div class="modal-title">🔁 Transfer Stock</div><div class="modal-sub">STOCK_TRANSFER · BETWEEN_WAREHOUSES</div>
@@ -720,17 +970,90 @@ tbody tr:last-child td { border-bottom: none; }
     <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal('transfer')">Cancel</button><button class="btn btn-accent" onclick="closeModal('transfer')">Confirm Transfer</button></div>
   </div>
 </div>
+
 <div class="modal-overlay" id="modal-addWarehouse">
   <div class="modal">
-    <div class="modal-title">🏗 Add Warehouse</div><div class="modal-sub">WAREHOUSE_SETUP · NEW_FACILITY</div>
-    <div class="form-row"><div class="form-group"><label class="form-label">Warehouse Name</label><input class="form-input" placeholder="e.g. Warehouse 4"/></div><div class="form-group"><label class="form-label">Location / City</label><input class="form-input" placeholder="e.g. Nagpur"/></div></div>
-    <div class="form-row"><div class="form-group"><label class="form-label">No. of Sections</label><input class="form-input" type="number" placeholder="4"/></div><div class="form-group"><label class="form-label">Racks per Section</label><input class="form-input" type="number" placeholder="6"/></div></div>
-    <div class="form-group"><label class="form-label">Bins per Rack</label><input class="form-input" type="number" placeholder="10"/></div>
-    <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal('addWarehouse')">Cancel</button><button class="btn btn-accent" onclick="closeModal('addWarehouse')">Create Warehouse</button></div>
+    <div class="modal-title">🏗 Add Warehouse</div>
+    <div class="modal-sub">WAREHOUSE_SETUP · NEW_FACILITY</div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Warehouse Name</label><input class="form-input" id="wh-name" placeholder="e.g. Warehouse 4"/></div>
+      <div class="form-group"><label class="form-label">Location / City</label><input class="form-input" id="wh-location" placeholder="e.g. Nagpur"/></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">No. of Sections</label><input class="form-input" id="wh-sections" type="number" placeholder="4" min="1"/></div>
+      <div class="form-group"><label class="form-label">Racks per Section</label><input class="form-input" id="wh-racks" type="number" placeholder="6" min="1"/></div>
+    </div>
+    <div class="form-group"><label class="form-label">Bins per Rack</label><input class="form-input" id="wh-bins" type="number" placeholder="10" min="1"/></div>
+    <div id="wh-error" style="display:none;background:#fef2f2;border:1px solid #fecaca;border-radius:7px;padding:9px 13px;font-size:12px;color:var(--accent3);margin-top:4px;"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('addWarehouse')">Cancel</button>
+      <button class="btn btn-accent" onclick="confirmAddWarehouse()">🏗 Create Warehouse</button>
+    </div>
   </div>
 </div>
 
-<script>
+<!-- EDIT WAREHOUSE MODAL -->
+<div class="modal-overlay" id="modal-editWarehouse">
+  <div class="modal">
+    <div class="modal-title">✏ Edit Warehouse</div>
+    <div class="modal-sub" id="edit-wh-sub">WAREHOUSE_EDIT · MODIFY_CAPACITY</div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Warehouse Name</label>
+        <input class="form-input" id="edit-wh-name"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Location / City</label>
+        <input class="form-input" id="edit-wh-location"/>
+      </div>
+    </div>
+
+    <div style="background:var(--panel2);border:1.5px solid var(--border);border-radius:9px;padding:16px;margin-bottom:14px;">
+      <div style="font-size:10px;font-family:var(--mono);font-weight:700;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:14px;">CAPACITY SETTINGS</div>
+
+      <div class="form-group" style="margin-bottom:12px">
+        <label class="form-label">Sections</label>
+        <div class="stepper">
+          <button class="stepper-btn" onclick="stepVal('edit-wh-sections',-1)">−</button>
+          <input class="stepper-val" id="edit-wh-sections" type="number" min="1" value="4"/>
+          <button class="stepper-btn" onclick="stepVal('edit-wh-sections',1)">+</button>
+        </div>
+      </div>
+
+      <div class="form-group" style="margin-bottom:12px">
+        <label class="form-label">Racks <span style="color:var(--muted);font-weight:400">(total across all sections)</span></label>
+        <div class="stepper">
+          <button class="stepper-btn" onclick="stepVal('edit-wh-racks',-1)">−</button>
+          <input class="stepper-val" id="edit-wh-racks" type="number" min="1" value="18"/>
+          <button class="stepper-btn" onclick="stepVal('edit-wh-racks',1)">+</button>
+        </div>
+      </div>
+
+      <div class="form-group" style="margin-bottom:4px">
+        <label class="form-label">Bins <span style="color:var(--muted);font-weight:400">(total across all racks)</span></label>
+        <div class="stepper">
+          <button class="stepper-btn" onclick="stepVal('edit-wh-bins',-1)">−</button>
+          <input class="stepper-val" id="edit-wh-bins" type="number" min="1" value="1200"/>
+          <button class="stepper-btn" onclick="stepVal('edit-wh-bins',10)">+</button>
+        </div>
+        <div style="font-size:10px;color:var(--muted);font-family:var(--mono);margin-top:5px;">Bins ± steps by 10 for convenience</div>
+      </div>
+    </div>
+
+    <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:var(--accent);">
+      📊 Updated capacity: <strong id="edit-wh-preview">—</strong> total bins
+    </div>
+
+    <div id="edit-wh-error" style="display:none;background:#fef2f2;border:1px solid #fecaca;border-radius:7px;padding:9px 13px;font-size:12px;color:var(--accent3);margin-bottom:8px;"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('editWarehouse')">Cancel</button>
+      <button class="btn btn-accent" onclick="confirmEditWarehouse()">💾 Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 const USERS = {
   'admin@waresys.com': { pass:'admin123', name:'Admin User',   role:'WAREHOUSE_ADMIN', initials:'AD' },
   'staff@waresys.com': { pass:'staff123', name:'Staff Member', role:'WAREHOUSE_STAFF', initials:'ST' },
@@ -752,14 +1075,12 @@ const ROLE_PERMISSIONS = {
   }
 };
 
-
 function applyRoleAccess(role) {
   const perms = ROLE_PERMISSIONS[role];
 
   document.querySelectorAll('.nav-item').forEach(item => {
     const match = item.getAttribute('onclick')?.match(/'(.+?)'/);
     const page = match ? match[1] : null;
-
     if (page && !perms.pages.includes(page)) {
       item.style.display = 'none';
     } else {
@@ -768,17 +1089,22 @@ function applyRoleAccess(role) {
   });
 
   const actionMap = {
-    addProduct: "[onclick=\"openModal('addProduct')\"]",
-    stockIn: "[onclick=\"openModal('stockIn')\"]",
-    stockOut: "[onclick=\"openModal('stockOut')\"]",
-    transfer: "[onclick=\"openModal('transfer')\"]",
+    addProduct: ".topbar [onclick=\"openModal('addProduct')\"], .quick-actions [onclick=\"openModal('addProduct')\"], #page-products [onclick=\"openModal('addProduct')\"], #page-warehouses [onclick=\"openModal('addProduct')\"]",
+    stockIn:    ".topbar [onclick=\"openModal('stockIn')\"], .quick-actions [onclick=\"openModal('stockIn')\"], #page-movement [onclick=\"openModal('stockIn')\"]",
+    stockOut:   ".topbar [onclick=\"openModal('stockOut')\"], .quick-actions [onclick=\"openModal('stockOut')\"], #page-movement [onclick=\"openModal('stockOut')\"], .filter-row [onclick=\"openModal('stockOut')\"]",
+    transfer:   ".topbar [onclick=\"openModal('transfer')\"], .quick-actions [onclick=\"openModal('transfer')\"], #page-movement [onclick=\"openModal('transfer')\"]",
     addWarehouse: "[onclick=\"openModal('addWarehouse')\"]"
   };
 
   Object.keys(actionMap).forEach(action => {
     document.querySelectorAll(actionMap[action]).forEach(btn => {
-      btn.style.display = perms.actions.includes(action) ? 'inline-flex' : 'none';
+      btn.style.display = perms.actions.includes(action) ? '' : 'none';
     });
+  });
+
+  // Row-level stock out buttons: hide only if stockOut not permitted
+  document.querySelectorAll('.row-out-btn').forEach(btn => {
+    btn.style.display = perms.actions.includes('stockOut') ? '' : 'none';
   });
 }
 
@@ -803,7 +1129,6 @@ function doLogin() {
   const btn   = document.getElementById('login-btn');
 
   errEl.classList.remove('show');
-
   const user = USERS[email];
 
   if (!user || user.pass !== pass) {
@@ -825,6 +1150,7 @@ function doLogin() {
 
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('app').classList.add('show');
+    recalcUtilization();
 
     btn.textContent = 'Sign In →';
     btn.classList.remove('loading');
@@ -838,10 +1164,8 @@ document.addEventListener('keydown', e => {
 function doLogout() {
   document.getElementById('app').classList.remove('show');
   document.getElementById('login-screen').style.display = 'flex';
-
   document.querySelectorAll('.nav-item').forEach(n => n.style.display = 'flex');
-  document.querySelectorAll('.btn, .qa-btn').forEach(b => b.style.display = 'inline-flex');
-
+  document.querySelectorAll('.btn, .qa-btn, .btn-confirm-danger').forEach(b => b.style.display = '');
   document.getElementById('login-email').value = 'admin@waresys.com';
   document.getElementById('login-pass').value  = 'admin123';
 }
@@ -864,6 +1188,581 @@ function showPage(id, el) {
 function navTo(id) {
   const map = {dashboard:0,warehouses:1,products:2,inventory:3,movement:4,orders:5,reports:6,settings:7};
   showPage(id, document.querySelectorAll('.nav-item')[map[id]]);
+}
+
+function openStockOutFor(productName, location) {
+  const sel = document.getElementById('so-product');
+  for (let opt of sel.options) {
+    if (opt.text === productName) { sel.value = opt.value; break; }
+  }
+  document.getElementById('so-location').value = location;
+  document.getElementById('so-qty').value = '';
+  document.getElementById('so-customer').value = '';
+  document.getElementById('so-ref').value = '';
+  document.getElementById('so-notes').value = '';
+  document.getElementById('stockout-error').style.display = 'none';
+  openModal('stockOut');
+}
+
+function confirmStockOut() {
+  const productName = document.getElementById('so-product').value;
+  const qtyOut      = parseInt(document.getElementById('so-qty').value);
+  const errEl       = document.getElementById('stockout-error');
+
+  errEl.style.display = 'none';
+
+  if (!qtyOut || qtyOut <= 0) {
+    errEl.textContent = '⚠ Please enter a valid quantity to dispatch.';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  // Find the matching row in the inventory table
+  const invRows = document.querySelectorAll('#page-inventory tbody tr');
+  let matched = false;
+
+  for (let row of invRows) {
+    const nameCell = row.querySelector('td:first-child strong');
+    if (!nameCell || nameCell.textContent.trim() !== productName) continue;
+
+    // Read current qty (5th td, index 5)
+    const qtyCell = row.cells[5];
+    const currentQty = parseInt(qtyCell.textContent.replace(/,/g, ''));
+
+    if (qtyOut > currentQty) {
+      errEl.textContent = `⚠ Cannot dispatch ${qtyOut} units — only ${currentQty} in stock.`;
+      errEl.style.display = 'block';
+      return;
+    }
+
+    const newQty = currentQty - qtyOut;
+    qtyCell.textContent = newQty.toLocaleString();
+
+    // Update status badge (7th td, index 6)
+    const statusCell = row.cells[6];
+    let newBadge = '';
+    if (newQty === 0) {
+      newBadge = '<span class="badge badge-out">OUT</span>';
+      // Grey out the row
+      row.style.opacity = '0.5';
+      row.querySelector('.row-out-btn').disabled = true;
+      row.querySelector('.row-out-btn').textContent = '✓ Out of Stock';
+      row.querySelector('.row-out-btn').style.pointerEvents = 'none';
+    } else if (newQty <= 20) {
+      newBadge = '<span class="badge badge-low">LOW</span>';
+    } else if (newQty >= 500) {
+      newBadge = '<span class="badge badge-warn">OVER</span>';
+    } else {
+      newBadge = '<span class="badge badge-ok">OK</span>';
+    }
+    statusCell.innerHTML = newBadge;
+
+    // Also update the dashboard inventory overview if the product is shown there
+    const dashRows = document.querySelectorAll('#page-dashboard tbody tr');
+    for (let drow of dashRows) {
+      const dn = drow.querySelector('td:first-child div[style]');
+      if (dn && dn.textContent.trim() === productName) {
+        const dQtySpan = drow.querySelector('.qty-bar-wrap span');
+        if (dQtySpan) dQtySpan.textContent = newQty.toLocaleString();
+        const dFill = drow.querySelector('.qty-bar-fill');
+        if (dFill) {
+          const pct = Math.min(100, Math.round((newQty / Math.max(newQty + qtyOut, 1)) * parseInt(dFill.style.width)));
+          dFill.style.width = pct + '%';
+        }
+        const dStatus = drow.cells[3];
+        if (dStatus) dStatus.innerHTML = newBadge;
+        break;
+      }
+    }
+
+    matched = true;
+    break;
+  }
+
+  if (!matched) {
+    errEl.textContent = '⚠ Product not found in inventory.';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  closeModal('stockOut');
+  recalcUtilization();
+  // Show a brief toast confirmation
+  showToast(`✅ Dispatched ${qtyOut} × ${productName} successfully`);
+}
+
+function showToast(msg) {
+  let toast = document.getElementById('app-toast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'app-toast';
+    toast.style.cssText = `
+      position:fixed; bottom:28px; left:50%; transform:translateX(-50%) translateY(20px);
+      background:#0f172a; color:#fff; padding:11px 22px; border-radius:10px;
+      font-size:13px; font-weight:600; font-family:var(--syne);
+      box-shadow:0 8px 24px rgba(15,23,42,0.25); z-index:999;
+      opacity:0; transition:all 0.25s ease; white-space:nowrap;
+    `;
+    document.body.appendChild(toast);
+  }
+  toast.textContent = msg;
+  toast.style.opacity = '1';
+  toast.style.transform = 'translateX(-50%) translateY(0)';
+  clearTimeout(toast._timer);
+  toast._timer = setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateX(-50%) translateY(20px)';
+  }, 3000);
+}
+
+// ── UTILIZATION ENGINE ───────────────────────────────────
+// Each inventory row with qty > 0 = 1 occupied bin slot
+// Utilization % = occupied bins / total bins (from warehouse table)
+
+function recalcUtilization() {
+  const whData = {};
+
+  // Seed totals from warehouse table
+  document.querySelectorAll('#wh-table tbody tr').forEach(row => {
+    const nameEl = row.cells[0]?.querySelector('strong');
+    if (!nameEl) return;
+    const whName   = nameEl.textContent.trim();
+    const whCode   = 'WH' + whName.replace(/\D/g, '');
+    const totalBins = parseInt((row.dataset.bins || row.cells[4]?.textContent || '0').replace(/,/g,'')) || 1;
+    whData[whCode] = { name: whName, totalBins, occupied: 0, row };
+  });
+
+  // Count occupied bins from inventory table
+  document.querySelectorAll('#page-inventory tbody tr').forEach(invRow => {
+    const whCode = (invRow.dataset.wh || invRow.cells[2]?.textContent || '').trim();
+    const qty    = parseInt((invRow.cells[5]?.textContent || '0').replace(/,/g,'')) || 0;
+    if (whData[whCode] && qty > 0) whData[whCode].occupied++;
+  });
+
+  // Apply to warehouse table rows + dashboard nodes
+  Object.entries(whData).forEach(([whCode, d]) => {
+    const util     = Math.min(100, Math.round((d.occupied / d.totalBins) * 100));
+    const barColor = util >= 85 ? 'var(--accent3)' : util >= 60 ? 'var(--accent)' : 'var(--accent4)';
+    const badgeHtml = util >= 85
+      ? '<span class="badge badge-warn">NEAR FULL</span>'
+      : '<span class="badge badge-ok">ACTIVE</span>';
+
+    if (d.row) {
+      d.row.dataset.util = util;
+      d.row.cells[5].innerHTML = `
+        <div class="qty-bar-wrap">
+          <div class="qty-bar" style="max-width:80px">
+            <div class="qty-bar-fill" style="width:${util}%;background:${barColor}"></div>
+          </div>
+          <span class="sku">${util}%</span>
+        </div>`;
+      d.row.cells[6].innerHTML = badgeHtml;
+    }
+
+    document.querySelectorAll('.wh-node').forEach(node => {
+      if (node.querySelector('.wh-node-name')?.textContent?.trim() !== d.name) return;
+      const stat = node.querySelector('.wh-node-stat');
+      const sub  = node.querySelector('.wh-node-sub');
+      const fill = node.querySelector('.wh-util-fill');
+      if (stat) { stat.textContent = util + '%'; stat.style.color = barColor; }
+      if (sub)  sub.textContent = `${d.occupied} / ${d.totalBins.toLocaleString()} bins used`;
+      if (fill) { fill.style.width = util + '%'; fill.style.background = barColor; }
+    });
+  });
+}
+
+// ── WAREHOUSE EDIT ──────────────────────────────────────
+let _editWhRow = null; // reference to the row being edited
+
+function openEditWarehouse(btn) {
+  const row = btn.closest('tr');
+  _editWhRow = row;
+
+  const name     = row.cells[0].querySelector('strong').textContent;
+  const location = row.cells[1].textContent;
+  const sections = parseInt(row.dataset.sections) || parseInt(row.cells[2].textContent) || 1;
+  const racks    = parseInt(row.dataset.racks)    || parseInt(row.cells[3].textContent.replace(/,/g,'')) || 1;
+  const bins     = parseInt(row.dataset.bins)     || parseInt(row.cells[4].textContent.replace(/,/g,'')) || 1;
+
+  document.getElementById('edit-wh-name').value     = name;
+  document.getElementById('edit-wh-location').value = location;
+  document.getElementById('edit-wh-sections').value = sections;
+  document.getElementById('edit-wh-racks').value    = racks;
+  document.getElementById('edit-wh-bins').value     = bins;
+  document.getElementById('edit-wh-sub').textContent = name.toUpperCase() + ' · MODIFY_CAPACITY';
+  document.getElementById('edit-wh-error').style.display = 'none';
+
+  updateEditPreview();
+  openModal('editWarehouse');
+}
+
+function stepVal(id, delta) {
+  const inp = document.getElementById(id);
+  const min = parseInt(inp.min) || 1;
+  inp.value = Math.max(min, (parseInt(inp.value) || 0) + delta);
+  updateEditPreview();
+}
+
+function updateEditPreview() {
+  const bins = parseInt(document.getElementById('edit-wh-bins').value) || 0;
+  document.getElementById('edit-wh-preview').textContent = bins.toLocaleString();
+}
+
+// Live preview on manual input too
+['edit-wh-sections','edit-wh-racks','edit-wh-bins'].forEach(id => {
+  document.addEventListener('DOMContentLoaded', () => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('input', updateEditPreview);
+  });
+});
+
+function confirmEditWarehouse() {
+  const name     = document.getElementById('edit-wh-name').value.trim();
+  const location = document.getElementById('edit-wh-location').value.trim();
+  const sections = parseInt(document.getElementById('edit-wh-sections').value);
+  const racks    = parseInt(document.getElementById('edit-wh-racks').value);
+  const bins     = parseInt(document.getElementById('edit-wh-bins').value);
+  const errEl    = document.getElementById('edit-wh-error');
+  errEl.style.display = 'none';
+
+  if (!name)     { errEl.textContent = '⚠ Warehouse name is required.'; errEl.style.display = 'block'; return; }
+  if (!location) { errEl.textContent = '⚠ Location is required.';       errEl.style.display = 'block'; return; }
+  if (sections < 1 || racks < 1 || bins < 1) {
+    errEl.textContent = '⚠ Sections, racks and bins must each be at least 1.';
+    errEl.style.display = 'block'; return;
+  }
+
+  const row = _editWhRow;
+  const util = parseInt(row.dataset.util) || 0;
+
+  // Update row cells
+  row.cells[0].innerHTML  = `<strong>${name}</strong>`;
+  row.cells[1].textContent = location;
+  row.cells[1].className   = 'sku';
+  row.cells[2].textContent = sections;
+  row.cells[3].textContent = racks.toLocaleString();
+  row.cells[4].textContent = bins.toLocaleString();
+
+  // Update utilization bar colour
+  const barColor = util >= 90 ? 'var(--accent3)' : util >= 70 ? 'var(--accent)' : 'var(--accent4)';
+  row.cells[5].innerHTML = `
+    <div class="qty-bar-wrap">
+      <div class="qty-bar" style="max-width:80px">
+        <div class="qty-bar-fill" style="width:${util}%;background:${barColor}"></div>
+      </div>
+      <span class="sku">${util}%</span>
+    </div>`;
+
+  // Update status badge
+  const badge = util >= 90
+    ? '<span class="badge badge-warn">NEAR FULL</span>'
+    : '<span class="badge badge-ok">ACTIVE</span>';
+  row.cells[6].innerHTML = badge;
+
+  // Store updated data attrs
+  row.dataset.sections = sections;
+  row.dataset.racks    = racks;
+  row.dataset.bins     = bins;
+
+  // Update dashboard warehouse map node (match by name)
+  document.querySelectorAll('.wh-node').forEach(node => {
+    if (node.querySelector('.wh-node-name')?.textContent === name ||
+        node.querySelector('.wh-node-name')?.textContent === row.cells[0].querySelector('strong')?.textContent) {
+      node.querySelector('.wh-node-name').textContent = name;
+      node.querySelector('.wh-node-loc').textContent  = location;
+      const sub = node.querySelector('.wh-node-sub');
+      if (sub) sub.textContent = `— / ${bins.toLocaleString()} bins`;
+    }
+  });
+
+  closeModal('editWarehouse');
+  recalcUtilization();
+  showToast(`✅ "${name}" updated — ${bins.toLocaleString()} bins, ${racks} racks`);
+}
+
+// ── WAREHOUSE ADD ────────────────────────────────────────
+function confirmAddWarehouse() {
+  const name     = document.getElementById('wh-name').value.trim();
+  const location = document.getElementById('wh-location').value.trim();
+  const sections = parseInt(document.getElementById('wh-sections').value) || 0;
+  const racks    = parseInt(document.getElementById('wh-racks').value) || 0;
+  const bins     = parseInt(document.getElementById('wh-bins').value) || 0;
+  const errEl    = document.getElementById('wh-error');
+  errEl.style.display = 'none';
+
+  if (!name) {
+    errEl.textContent = '⚠ Warehouse name is required.'; errEl.style.display = 'block';
+    document.getElementById('wh-name').focus(); return;
+  }
+  if (!location) {
+    errEl.textContent = '⚠ Location / city is required.'; errEl.style.display = 'block';
+    document.getElementById('wh-location').focus(); return;
+  }
+  if (sections <= 0 || racks <= 0 || bins <= 0) {
+    errEl.textContent = '⚠ Sections, racks, and bins must each be at least 1.'; errEl.style.display = 'block'; return;
+  }
+
+  const totalBins  = sections * racks * bins;
+  const totalRacks = sections * racks;
+  const whNum      = document.querySelectorAll('#page-warehouses tbody tr').length + 1;
+  const whCode     = 'WH' + whNum;
+
+  // Add row to Warehouses table
+  const whTbody = document.querySelector('#page-warehouses tbody');
+  const tr = document.createElement('tr');
+  tr.dataset.sections = sections;
+  tr.dataset.racks    = totalRacks;
+  tr.dataset.bins     = totalBins;
+  tr.dataset.util     = 0;
+  tr.innerHTML = `
+    <td><strong>${name}</strong></td>
+    <td class="sku">${location}</td>
+    <td>${sections}</td>
+    <td>${totalRacks}</td>
+    <td>${totalBins.toLocaleString()}</td>
+    <td>
+      <div class="qty-bar-wrap">
+        <div class="qty-bar" style="max-width:80px"><div class="qty-bar-fill" style="width:0%;background:var(--accent4)"></div></div>
+        <span class="sku">0%</span>
+      </div>
+    </td>
+    <td><span class="badge badge-ok">ACTIVE</span></td>
+    <td><button class="row-edit-btn" onclick="openEditWarehouse(this)">✏ Edit</button></td>
+  `;
+  whTbody.appendChild(tr);
+
+  // Add to warehouse map on dashboard
+  const whMap = document.querySelector('.warehouse-map');
+  if (whMap) {
+    const node = document.createElement('div');
+    node.className = 'wh-node';
+    node.innerHTML = `
+      <div class="wh-node-name">${name}</div>
+      <div class="wh-node-loc">${location}</div>
+      <div class="wh-node-stat" style="color:var(--accent4)">0%</div>
+      <div class="wh-node-sub">0 / ${totalBins.toLocaleString()} bins</div>
+      <div class="wh-util"><div class="wh-util-bar"><div class="wh-util-fill" style="width:0%;background:var(--accent4)"></div></div></div>
+    `;
+    whMap.appendChild(node);
+  }
+
+  // Add to all Warehouse dropdowns in modals
+  document.querySelectorAll('select.form-input').forEach(sel => {
+    const hasWh = Array.from(sel.options).some(o => o.text.startsWith('Warehouse ') || o.text === 'Warehouse 1');
+    if (hasWh) {
+      const opt = document.createElement('option');
+      opt.value = name; opt.textContent = name;
+      sel.appendChild(opt);
+    }
+  });
+
+  // Also add to Stock In warehouse select specifically
+  const siWh = document.getElementById('si-warehouse');
+  if (siWh && !Array.from(siWh.options).some(o => o.value === name)) {
+    const opt = document.createElement('option');
+    opt.value = name; opt.textContent = name;
+    siWh.appendChild(opt);
+  }
+
+  // Also update inventory filter dropdown
+  document.querySelectorAll('.filter-select').forEach(sel => {
+    if (Array.from(sel.options).some(o => o.text === 'Warehouse 1')) {
+      const opt = document.createElement('option');
+      opt.textContent = name;
+      sel.appendChild(opt);
+    }
+  });
+
+  // Clear fields
+  ['wh-name','wh-location','wh-sections','wh-racks','wh-bins'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+
+  closeModal('addWarehouse');
+  showToast(`✅ "${name}" (${whCode}) created — ${totalBins.toLocaleString()} bins`);
+}
+
+function toggleAddProduct(show) {
+  document.getElementById('si-new-product-group').style.display = show ? 'block' : 'none';
+  document.getElementById('si-product-select-group').style.display = show ? 'none' : 'block';
+  document.getElementById('si-new-product-error').style.display = 'none';
+  if (!show) {
+    ['si-new-product-name','si-new-product-sku','si-new-product-unit'].forEach(id => {
+      document.getElementById(id).value = '';
+    });
+  }
+}
+
+function saveNewProduct() {
+  const name     = document.getElementById('si-new-product-name').value.trim();
+  const sku      = document.getElementById('si-new-product-sku').value.trim();
+  const category = document.getElementById('si-new-product-category').value;
+  const errEl    = document.getElementById('si-new-product-error');
+
+  if (!name) {
+    errEl.textContent = '⚠ Product name is required.';
+    errEl.style.display = 'block';
+    document.getElementById('si-new-product-name').focus();
+    return;
+  }
+  if (!sku) {
+    errEl.textContent = '⚠ SKU is required.';
+    errEl.style.display = 'block';
+    document.getElementById('si-new-product-sku').focus();
+    return;
+  }
+  errEl.style.display = 'none';
+
+  // Add to the product select dropdown in this modal
+  const sel = document.getElementById('si-product');
+  const opt = document.createElement('option');
+  opt.value = name;
+  opt.textContent = name;
+  sel.appendChild(opt);
+  sel.value = name;
+
+  // Also add to the Stock Out modal select
+  const soSel = document.getElementById('so-product');
+  if (soSel) {
+    const soOpt = document.createElement('option');
+    soOpt.value = name; soOpt.textContent = name;
+    soSel.appendChild(soOpt);
+  }
+
+  // Add a new row to the Inventory table
+  const invTbody = document.querySelector('#page-inventory tbody');
+  if (invTbody) {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><strong>${name}</strong></td>
+      <td class="sku">${sku}</td>
+      <td>—</td>
+      <td>—</td>
+      <td>—</td>
+      <td>0</td>
+      <td><span class="badge badge-out">OUT</span></td>
+      <td><button class="row-out-btn" onclick="openStockOutFor('${name}','—')" disabled style="pointer-events:none;">✓ Out of Stock</button></td>
+    `;
+    tr.style.opacity = '0.55';
+    invTbody.appendChild(tr);
+  }
+
+  // Add to Products page table too
+  const prodTbody = document.querySelector('#page-products tbody');
+  if (prodTbody) {
+    const tr2 = document.createElement('tr');
+    tr2.innerHTML = `
+      <td><strong>${name}</strong></td>
+      <td class="sku">${sku}</td>
+      <td>${category}</td>
+      <td class="sku">—</td>
+      <td>0</td>
+      <td><span class="badge badge-out">OUT</span></td>
+    `;
+    prodTbody.appendChild(tr2);
+  }
+
+  toggleAddProduct(false);
+  showToast(`✅ Product "${name}" (${sku}) added & selected`);
+}
+
+function toggleAddSupplier(show) {
+  document.getElementById('si-new-supplier-group').style.display = show ? 'block' : 'none';
+  document.getElementById('si-supplier-select-group').style.display = show ? 'none' : 'block';
+  if (!show) {
+    // clear fields
+    ['si-new-name','si-new-contact','si-new-phone','si-new-email','si-new-city'].forEach(id => {
+      document.getElementById(id).value = '';
+    });
+  }
+}
+
+function saveNewSupplier() {
+  const name = document.getElementById('si-new-name').value.trim();
+  if (!name) {
+    document.getElementById('si-new-name').focus();
+    document.getElementById('si-new-name').style.borderColor = 'var(--accent3)';
+    return;
+  }
+  document.getElementById('si-new-name').style.borderColor = '';
+
+  // Add to the select dropdown
+  const sel = document.getElementById('si-supplier-select');
+  const opt = document.createElement('option');
+  opt.value = name;
+  opt.textContent = name;
+  sel.appendChild(opt);
+  sel.value = name;
+
+  // Switch back to select view
+  toggleAddSupplier(false);
+  showToast(`✅ Supplier "${name}" added & selected`);
+}
+
+function confirmStockIn() {
+  const supplier = document.getElementById('si-supplier-select').value;
+  const qty      = parseInt(document.getElementById('si-qty').value);
+  const errEl    = document.getElementById('si-error');
+  errEl.style.display = 'none';
+
+  if (!supplier) {
+    errEl.textContent = '⚠ Please select a supplier.';
+    errEl.style.display = 'block'; return;
+  }
+  if (!qty || qty <= 0) {
+    errEl.textContent = '⚠ Please enter a valid quantity.';
+    errEl.style.display = 'block'; return;
+  }
+
+  const productName = document.getElementById('si-product').value;
+  if (!productName) {
+    errEl.textContent = '⚠ Please select a product.';
+    errEl.style.display = 'block'; return;
+  }
+
+  const warehouse = document.getElementById('si-warehouse').value;
+  const bin       = document.getElementById('si-bin').value || '—';
+
+  // Update inventory table quantity
+  const invRows = document.querySelectorAll('#page-inventory tbody tr');
+  for (let row of invRows) {
+    const nameCell = row.querySelector('td:first-child strong');
+    if (!nameCell || nameCell.textContent.trim() !== productName) continue;
+
+    const qtyCell = row.cells[5];
+    const newQty  = (parseInt(qtyCell.textContent.replace(/,/g,'')) || 0) + qty;
+    qtyCell.textContent = newQty.toLocaleString();
+
+    // Update warehouse & bin if they were blank (new product)
+    if (row.cells[2].textContent === '—') row.cells[2].textContent = warehouse.replace('Warehouse ','WH');
+    if (row.cells[4].textContent === '—') row.cells[4].textContent = bin;
+
+    // Re-enable row-out-btn
+    const rowBtn = row.querySelector('.row-out-btn');
+    if (rowBtn) {
+      rowBtn.disabled = false;
+      rowBtn.textContent = '📤 Stock Out';
+      rowBtn.style.pointerEvents = '';
+      rowBtn.onclick = () => openStockOutFor(productName, `${warehouse.replace('Warehouse ','WH')} / ${bin}`);
+    }
+    row.style.opacity = '';
+
+    // Recalc status badge
+    const statusCell = row.cells[6];
+    if (newQty <= 0)        statusCell.innerHTML = '<span class="badge badge-out">OUT</span>';
+    else if (newQty <= 20)  statusCell.innerHTML = '<span class="badge badge-low">LOW</span>';
+    else if (newQty >= 500) statusCell.innerHTML = '<span class="badge badge-warn">OVER</span>';
+    else                    statusCell.innerHTML = '<span class="badge badge-ok">OK</span>';
+    break;
+  }
+
+  // Reset fields
+  document.getElementById('si-qty').value = '';
+  document.getElementById('si-bin').value = '';
+
+  closeModal('stockIn');
+  recalcUtilization();
+  showToast(`✅ Stocked in ${qty} × ${productName} from ${supplier}`);
 }
 
 function openModal(id)  { document.getElementById('modal-'+id).classList.add('open'); }
