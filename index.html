@@ -229,6 +229,28 @@ body {
   border-radius: 8px; padding: 7px 13px; width: 210px; transition: border-color 0.13s;
 }
 .search-box:focus-within { border-color: var(--accent); }
+
+#search-dropdown {
+  position: absolute; top: calc(100% + 6px); left: 0; right: 0;
+  background: var(--panel); border: 1.5px solid var(--border);
+  border-radius: 10px; box-shadow: var(--shadow2);
+  z-index: 999; max-height: 340px; overflow-y: auto;
+  display: none;
+}
+#search-dropdown.open { display: block; }
+.search-dropdown-wrap { position: relative; }
+.sd-section { padding: 6px 0; border-bottom: 1px solid var(--border); }
+.sd-section:last-child { border-bottom: none; }
+.sd-label { font-size: 9px; font-family: var(--mono); letter-spacing: 1.5px; color: var(--muted); text-transform: uppercase; padding: 6px 14px 3px; }
+.sd-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 14px; cursor: pointer; transition: background 0.1s;
+}
+.sd-item:hover { background: #eff6ff; }
+.sd-item-icon { font-size: 14px; width: 20px; text-align: center; }
+.sd-item-main { font-size: 12px; font-weight: 600; color: var(--text); }
+.sd-item-sub  { font-size: 11px; color: var(--muted); font-family: var(--mono); }
+.sd-empty { padding: 18px 14px; text-align: center; color: var(--muted); font-size: 12px; }
 .search-box input { background: none; border: none; outline: none; color: var(--text); font-family: var(--mono); font-size: 12px; width: 100%; }
 .search-box input::placeholder { color: var(--muted); }
 
@@ -528,7 +550,10 @@ tbody tr:last-child td { border-bottom: none; }
   <div class="main">
     <div class="topbar">
       <div class="topbar-title" id="page-title">Warehouse <span>Dashboard</span></div>
-      <div class="search-box"><span style="color:var(--muted)">⌕</span><input type="text" placeholder="Search products, SKU..."/></div>
+      <div class="search-dropdown-wrap">
+        <div class="search-box"><span style="color:var(--muted)">⌕</span><input id="global-search" type="text" placeholder="Search products, SKU..."/></div>
+        <div id="search-dropdown"></div>
+      </div>
       <!-- ✅ Stock Out button added to topbar -->
       <button class="btn btn-danger" onclick="openModal('stockOut')">📤 Stock Out</button>
       <button class="btn btn-ghost" onclick="openModal('stockIn')">+ Stock In</button>
@@ -551,7 +576,7 @@ tbody tr:last-child td { border-bottom: none; }
         <button class="qa-btn" onclick="openModal('transfer')"><div class="dot" style="background:var(--accent5)"></div> Transfer Stock</button>
         <button class="qa-btn" onclick="navTo('reports')"><div class="dot" style="background:var(--muted)"></div> View Reports</button>
       </div>
-      <div class="lower-grid">
+      <div style="display:flex;flex-direction:column;gap:14px;margin-bottom:22px;">
         <div class="card">
           <div class="card-header"><div class="card-title">📋 Inventory Overview</div><div class="card-action" onclick="navTo('inventory')">View All →</div></div>
           <table>
@@ -565,18 +590,6 @@ tbody tr:last-child td { border-bottom: none; }
             </tbody>
           </table>
         </div>
-        <div class="card">
-          <div class="card-header"><div class="card-title">⚠ Active Alerts</div><div class="card-action">Clear All</div></div>
-          <div class="alerts-list">
-            <div class="alert-item"><div class="alert-dot dot-red"></div><div><div class="alert-msg"><strong>Hex Nut M8</strong> — critically low stock (18 units)</div><div class="alert-meta">WH1/R-B/B-07 · 2 min ago</div></div></div>
-            <div class="alert-item"><div class="alert-dot dot-red"></div><div><div class="alert-msg"><strong>Rubber Gasket A</strong> — stock below threshold (7 units)</div><div class="alert-meta">WH3/R-D/B-02 · 14 min ago</div></div></div>
-            <div class="alert-item"><div class="alert-dot dot-yellow"></div><div><div class="alert-msg"><strong>PVC Pipe 2in</strong> — overstock detected (540 units)</div><div class="alert-meta">WH2/R-C/B-01 · 1 hr ago</div></div></div>
-            <div class="alert-item"><div class="alert-dot dot-blue"></div><div><div class="alert-msg">Inbound order <strong>#INB-0481</strong> pending confirmation</div><div class="alert-meta">Supplier: MetalWorks Co. · 3 hr ago</div></div></div>
-            <div class="alert-item"><div class="alert-dot dot-yellow"></div><div><div class="alert-msg"><strong>Copper Elbow 45°</strong> expiry approaching in 14 days</div><div class="alert-meta">WH2/R-A/B-05 · today</div></div></div>
-          </div>
-        </div>
-      </div>
-      <div class="lower-grid">
         <div class="card">
           <div class="card-header"><div class="card-title">↕ Recent Stock Movements</div><div class="card-action" onclick="navTo('movement')">View All →</div></div>
           <div>
@@ -721,36 +734,12 @@ tbody tr:last-child td { border-bottom: none; }
     <div class="content page" id="page-reports">
       <div class="section-title">📊 Reports</div>
       <div class="quick-actions" style="margin-bottom:20px">
-        <button class="qa-btn"><div class="dot" style="background:var(--accent2)"></div> Stock Report</button>
-        <button class="qa-btn"><div class="dot" style="background:var(--accent4)"></div> Movement Report</button>
-        <button class="qa-btn"><div class="dot" style="background:var(--accent)"></div> Warehouse Report</button>
-        <button class="qa-btn" style="background:var(--accent);color:#fff;border:none;font-weight:700"><div class="dot" style="background:#fff"></div> Export PDF</button>
-        <button class="qa-btn"><div class="dot" style="background:var(--accent3)"></div> Export Excel</button>
+        <button class="qa-btn" id="rpt-btn-stock"     onclick="showReport('stock')"    ><div class="dot" style="background:var(--accent2)"></div> Stock Report</button>
+        <button class="qa-btn" id="rpt-btn-movement"  onclick="showReport('movement')" ><div class="dot" style="background:var(--accent4)"></div> Movement Report</button>
+        <button class="qa-btn" id="rpt-btn-warehouse" onclick="showReport('warehouse')"><div class="dot" style="background:var(--accent)"></div> Warehouse Report</button>
+
       </div>
-      <div class="lower-grid">
-        <div class="card">
-          <div class="card-header"><div class="card-title">Warehouse Stock Summary</div></div>
-          <table>
-            <thead><tr><th>Warehouse</th><th>Total SKUs</th><th>Total Units</th><th>Low Stock</th></tr></thead>
-            <tbody>
-              <tr><td><strong>WH1 — Mumbai North</strong></td><td>540</td><td>22,400</td><td><span class="badge badge-low">8</span></td></tr>
-              <tr><td><strong>WH2 — Pune Central</strong></td><td>380</td><td>14,100</td><td><span class="badge badge-low">5</span></td></tr>
-              <tr><td><strong>WH3 — Nashik Depot</strong></td><td>364</td><td>12,430</td><td><span class="badge badge-low">4</span></td></tr>
-            </tbody>
-          </table>
-        </div>
-        <div class="card">
-          <div class="card-header"><div class="card-title">Movement Summary (March 2025)</div></div>
-          <table>
-            <thead><tr><th>Type</th><th>Count</th><th>Total Units</th></tr></thead>
-            <tbody>
-              <tr><td><span class="badge badge-in">INBOUND</span></td><td>42</td><td>8,200</td></tr>
-              <tr><td><span class="badge badge-out">OUTBOUND</span></td><td>67</td><td>12,100</td></tr>
-              <tr><td><span class="badge badge-xfer">TRANSFER</span></td><td>15</td><td>2,300</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <div id="report-output"></div>
     </div>
 
     <!-- SETTINGS -->
@@ -963,11 +952,59 @@ tbody tr:last-child td { border-bottom: none; }
 
 <div class="modal-overlay" id="modal-transfer">
   <div class="modal">
-    <div class="modal-title">🔁 Transfer Stock</div><div class="modal-sub">STOCK_TRANSFER · BETWEEN_WAREHOUSES</div>
-    <div class="form-row"><div class="form-group"><label class="form-label">Product</label><select class="form-input"><option>Steel Bolt M10</option><option>PVC Pipe 2in</option><option>Cable Tie 30cm</option><option>Hex Nut M8</option></select></div><div class="form-group"><label class="form-label">Quantity</label><input class="form-input" type="number" placeholder="0"/></div></div>
-    <div class="form-group"><label class="form-label">From (Warehouse / Bin)</label><input class="form-input" placeholder="WH2 / R-C / B-01" style="font-family:var(--mono)"/></div>
-    <div class="form-group"><label class="form-label">To (Warehouse / Bin)</label><input class="form-input" placeholder="WH3 / R-B / B-04" style="font-family:var(--mono)"/></div>
-    <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal('transfer')">Cancel</button><button class="btn btn-accent" onclick="closeModal('transfer')">Confirm Transfer</button></div>
+    <div class="modal-title">🔁 Transfer Stock</div>
+    <div class="modal-sub">STOCK_TRANSFER · BETWEEN_WAREHOUSES</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Product</label>
+        <select class="form-input" id="tr-product">
+          <option value="">— Select Product —</option>
+          <option>Steel Bolt M10</option>
+          <option>Hex Nut M8</option>
+          <option>PVC Pipe 2in</option>
+          <option>Cable Tie 30cm</option>
+          <option>Rubber Gasket A</option>
+          <option>Copper Elbow 45°</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Quantity</label>
+        <input class="form-input" id="tr-qty" type="number" placeholder="0" min="1"/>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">From Warehouse</label>
+        <select class="form-input" id="tr-from">
+          <option>Warehouse 1</option>
+          <option>Warehouse 2</option>
+          <option>Warehouse 3</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">To Warehouse</label>
+        <select class="form-input" id="tr-to">
+          <option>Warehouse 1</option>
+          <option>Warehouse 2</option>
+          <option>Warehouse 3</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">From Bin</label>
+        <input class="form-input" id="tr-from-bin" placeholder="e.g. R-C / B-01" style="font-family:var(--mono)"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">To Bin</label>
+        <input class="form-input" id="tr-to-bin" placeholder="e.g. R-B / B-04" style="font-family:var(--mono)"/>
+      </div>
+    </div>
+    <div id="tr-error" style="display:none;background:#fef2f2;border:1px solid #fecaca;border-radius:7px;padding:9px 13px;font-size:12px;color:var(--accent3);margin-top:4px;"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('transfer')">Cancel</button>
+      <button class="btn btn-accent" onclick="confirmTransfer()">🔁 Confirm Transfer</button>
+    </div>
   </div>
 </div>
 
@@ -1183,6 +1220,7 @@ function showPage(id, el) {
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   if (el) el.classList.add('active');
   document.getElementById('page-title').innerHTML = pageTitles[id] || id;
+  if (id === 'reports') showReport(_currentReport || 'stock');
 }
 
 function navTo(id) {
@@ -1589,6 +1627,16 @@ function confirmAddWarehouse() {
     siWh.appendChild(opt);
   }
 
+  // Also add to Transfer modal from/to warehouse selects
+  ['tr-from','tr-to'].forEach(id => {
+    const sel = document.getElementById(id);
+    if (sel && !Array.from(sel.options).some(o => o.value === name)) {
+      const opt = document.createElement('option');
+      opt.value = name; opt.textContent = name;
+      sel.appendChild(opt);
+    }
+  });
+
   // Also update inventory filter dropdown
   document.querySelectorAll('.filter-select').forEach(sel => {
     if (Array.from(sel.options).some(o => o.text === 'Warehouse 1')) {
@@ -1652,6 +1700,14 @@ function saveNewProduct() {
     const soOpt = document.createElement('option');
     soOpt.value = name; soOpt.textContent = name;
     soSel.appendChild(soOpt);
+  }
+
+  // Also add to the Transfer modal product select
+  const trSel = document.getElementById('tr-product');
+  if (trSel && !Array.from(trSel.options).some(o => o.value === name)) {
+    const trOpt = document.createElement('option');
+    trOpt.value = name; trOpt.textContent = name;
+    trSel.appendChild(trOpt);
   }
 
   // Add a new row to the Inventory table
@@ -1871,6 +1927,507 @@ function confirmStockIn() {
   closeModal('stockIn');
   recalcUtilization();
   showToast(`✅ Stocked in ${qty.toLocaleString()} × ${productName} → ${whCode2}`);
+}
+
+// ── REPORTS ENGINE ───────────────────────────────────────
+let _currentReport = 'stock';
+let _currentReportData = [];
+
+function showReport(type) {
+  _currentReport = type;
+
+  // Highlight active button
+  ['stock','movement','warehouse'].forEach(t => {
+    const btn = document.getElementById('rpt-btn-' + t);
+    if (btn) { btn.style.background = t === type ? 'var(--accent)' : ''; btn.style.color = t === type ? '#fff' : ''; btn.style.border = t === type ? 'none' : ''; }
+  });
+
+  const out = document.getElementById('report-output');
+  if (!out) return;
+
+  if (type === 'stock')     out.innerHTML = buildStockReport();
+  if (type === 'movement')  out.innerHTML = buildMovementReport();
+  if (type === 'warehouse') out.innerHTML = buildWarehouseReport();
+}
+
+function buildStockReport() {
+  const rows = document.querySelectorAll('#page-inventory tbody tr');
+  let totalUnits = 0, lowCount = 0, outCount = 0, overCount = 0;
+  let bodyRows = '';
+  _currentReportData = [['Product','SKU','Warehouse','Bin','Quantity','Status']];
+
+  rows.forEach(r => {
+    const name   = r.cells[0]?.querySelector('strong')?.textContent || '—';
+    const sku    = r.cells[1]?.textContent || '—';
+    const wh     = r.cells[2]?.textContent || '—';
+    const bin    = r.cells[4]?.textContent || '—';
+    const qty    = parseInt((r.cells[5]?.textContent || '0').replace(/,/g,'')) || 0;
+    const badge  = r.cells[6]?.innerHTML || '';
+    totalUnits += qty;
+    if (badge.includes('LOW'))  lowCount++;
+    if (badge.includes('OUT'))  outCount++;
+    if (badge.includes('OVER')) overCount++;
+    bodyRows += `<tr><td><strong>${name}</strong></td><td class="sku">${sku}</td><td>${wh}</td><td>${bin}</td><td>${qty.toLocaleString()}</td><td>${badge}</td></tr>`;
+    _currentReportData.push([name, sku, wh, bin, qty, r.cells[6]?.textContent?.trim() || '']);
+  });
+
+  if (!bodyRows) bodyRows = '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:24px">No inventory data found.</td></tr>';
+
+  return `
+    <div class="stats-grid" style="margin-bottom:16px">
+      <div class="stat-card c2"><div class="stat-icon">📦</div><div class="stat-val" style="color:var(--accent2)">${rows.length}</div><div class="stat-label">Total SKUs</div></div>
+      <div class="stat-card c4"><div class="stat-icon">🔢</div><div class="stat-val" style="color:var(--accent4)">${totalUnits.toLocaleString()}</div><div class="stat-label">Total Units</div></div>
+      <div class="stat-card c3"><div class="stat-icon">⚠</div><div class="stat-val" style="color:var(--accent3)">${lowCount}</div><div class="stat-label">Low Stock Items</div></div>
+      <div class="stat-card c1"><div class="stat-icon">🚫</div><div class="stat-val" style="color:var(--accent3)">${outCount}</div><div class="stat-label">Out of Stock</div></div>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-title">📦 Stock Report — All Inventory</div><div class="card-action">Generated ${new Date().toLocaleDateString('en-IN')}</div></div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Product</th><th>SKU</th><th>Warehouse</th><th>Bin</th><th>Quantity</th><th>Status</th></tr></thead>
+        <tbody>${bodyRows}</tbody>
+      </table></div>
+    </div>`;
+}
+
+function buildMovementReport() {
+  const rows = document.querySelectorAll('#page-movement tbody tr');
+  let inCount = 0, outCount = 0, xferCount = 0, inUnits = 0, outUnits = 0, xferUnits = 0;
+  let bodyRows = '';
+  _currentReportData = [['Date','Product','Type','Qty','From','To','Reference']];
+
+  rows.forEach(r => {
+    const date   = r.cells[0]?.textContent || '—';
+    const prod   = r.cells[1]?.querySelector('strong')?.textContent || r.cells[1]?.textContent || '—';
+    const typeEl = r.cells[2]?.innerHTML || '';
+    const qty    = parseInt((r.cells[3]?.textContent || '0').replace(/[^0-9]/g,'')) || 0;
+    const from   = r.cells[4]?.textContent || '—';
+    const to     = r.cells[5]?.textContent || '—';
+    const ref    = r.cells[6]?.textContent || '—';
+    if (typeEl.includes('badge-in'))   { inCount++;   inUnits   += qty; }
+    if (typeEl.includes('badge-out'))  { outCount++;  outUnits  += qty; }
+    if (typeEl.includes('badge-xfer')) { xferCount++; xferUnits += qty; }
+    bodyRows += `<tr><td class="sku">${date}</td><td><strong>${prod}</strong></td><td>${typeEl}</td><td>${r.cells[3]?.textContent || '—'}</td><td class="sku">${from}</td><td class="sku">${to}</td><td class="sku">${ref}</td></tr>`;
+    _currentReportData.push([date, prod, r.cells[2]?.textContent?.trim(), qty, from, to, ref]);
+  });
+
+  if (!bodyRows) bodyRows = '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:24px">No movement data found.</td></tr>';
+
+  return `
+    <div class="stats-grid" style="margin-bottom:16px">
+      <div class="stat-card c4"><div class="stat-icon">📥</div><div class="stat-val" style="color:var(--accent4)">${inCount}</div><div class="stat-label">Stock-In Events · ${inUnits.toLocaleString()} units</div></div>
+      <div class="stat-card c3"><div class="stat-icon">📤</div><div class="stat-val" style="color:var(--accent3)">${outCount}</div><div class="stat-label">Stock-Out Events · ${outUnits.toLocaleString()} units</div></div>
+      <div class="stat-card c1"><div class="stat-icon">🔁</div><div class="stat-val" style="color:var(--accent)">${xferCount}</div><div class="stat-label">Transfers · ${xferUnits.toLocaleString()} units</div></div>
+      <div class="stat-card c2"><div class="stat-icon">📋</div><div class="stat-val" style="color:var(--accent2)">${rows.length}</div><div class="stat-label">Total Movements</div></div>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-title">↕ Movement Report — All Transactions</div><div class="card-action">Generated ${new Date().toLocaleDateString('en-IN')}</div></div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Date</th><th>Product</th><th>Type</th><th>Qty</th><th>From</th><th>To</th><th>Reference</th></tr></thead>
+        <tbody>${bodyRows}</tbody>
+      </table></div>
+    </div>`;
+}
+
+function buildWarehouseReport() {
+  const whRows  = document.querySelectorAll('#wh-table tbody tr');
+  const invRows = document.querySelectorAll('#page-inventory tbody tr');
+
+  // Build per-warehouse stats from live inventory
+  const stats = {};
+  whRows.forEach(r => {
+    const name     = r.cells[0]?.querySelector('strong')?.textContent || '—';
+    const location = r.cells[1]?.textContent || '—';
+    const whCode   = 'WH' + name.replace(/\D/g,'');
+    const capacity = parseInt((r.dataset.bins || r.cells[4]?.textContent || '0').replace(/,/g,'')) || 0;
+    stats[whCode]  = { name, location, capacity, units: 0, skus: 0 };
+  });
+
+  invRows.forEach(r => {
+    const wh  = (r.dataset.wh || r.cells[2]?.textContent || '').trim();
+    const qty = parseInt((r.cells[5]?.textContent || '0').replace(/,/g,'')) || 0;
+    if (stats[wh] && qty > 0) { stats[wh].units += qty; stats[wh].skus++; }
+  });
+
+  let bodyRows = '';
+  let summaryCards = '';
+  _currentReportData = [['Warehouse','Location','Capacity (bins)','Units Stored','SKUs','Utilization %']];
+
+  Object.entries(stats).forEach(([code, d]) => {
+    const util     = d.capacity > 0 ? Math.min(100, Math.round((d.units / d.capacity) * 100)) : 0;
+    const barColor = util >= 85 ? 'var(--accent3)' : util >= 60 ? 'var(--accent)' : 'var(--accent4)';
+    const badge    = util >= 85 ? '<span class="badge badge-warn">NEAR FULL</span>' : '<span class="badge badge-ok">ACTIVE</span>';
+    bodyRows += `
+      <tr>
+        <td><strong>${d.name}</strong><div class="sku">${code}</div></td>
+        <td>${d.location}</td>
+        <td>${d.capacity.toLocaleString()}</td>
+        <td>${d.units.toLocaleString()}</td>
+        <td>${d.skus}</td>
+        <td>
+          <div class="qty-bar-wrap">
+            <div class="qty-bar" style="max-width:90px"><div class="qty-bar-fill" style="width:${util}%;background:${barColor}"></div></div>
+            <span class="sku">${util}%</span>
+          </div>
+        </td>
+        <td>${badge}</td>
+      </tr>`;
+    _currentReportData.push([d.name, d.location, d.capacity, d.units, d.skus, util + '%']);
+  });
+
+  if (!bodyRows) bodyRows = '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:24px">No warehouse data found.</td></tr>';
+
+  const totalCap   = Object.values(stats).reduce((s,d) => s + d.capacity, 0);
+  const totalUnits = Object.values(stats).reduce((s,d) => s + d.units, 0);
+  const avgUtil    = totalCap > 0 ? Math.round((totalUnits / totalCap) * 100) : 0;
+
+  return `
+    <div class="stats-grid" style="margin-bottom:16px">
+      <div class="stat-card c1"><div class="stat-icon">🏗</div><div class="stat-val" style="color:var(--accent)">${whRows.length}</div><div class="stat-label">Total Warehouses</div></div>
+      <div class="stat-card c2"><div class="stat-icon">🗃</div><div class="stat-val" style="color:var(--accent2)">${totalCap.toLocaleString()}</div><div class="stat-label">Total Bin Capacity</div></div>
+      <div class="stat-card c4"><div class="stat-icon">📦</div><div class="stat-val" style="color:var(--accent4)">${totalUnits.toLocaleString()}</div><div class="stat-label">Total Units Stored</div></div>
+      <div class="stat-card c3"><div class="stat-icon">📊</div><div class="stat-val" style="color:${avgUtil>=85?'var(--accent3)':'var(--accent4)'}">${avgUtil}%</div><div class="stat-label">Avg Utilization</div></div>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-title">🏗 Warehouse Report — Capacity & Utilization</div><div class="card-action">Generated ${new Date().toLocaleDateString('en-IN')}</div></div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Warehouse</th><th>Location</th><th>Capacity</th><th>Units Stored</th><th>SKUs</th><th>Utilization</th><th>Status</th></tr></thead>
+        <tbody>${bodyRows}</tbody>
+      </table></div>
+    </div>`;
+}
+
+function exportReportPDF() {
+  if (!document.getElementById('report-output')?.innerHTML.trim()) {
+    showReport(_currentReport);
+  }
+  // Hide everything except the reports page, print, then restore
+  const sidebar  = document.querySelector('.sidebar');
+  const topbar   = document.querySelector('.topbar');
+  const allPages = document.querySelectorAll('.page');
+  const rptPage  = document.getElementById('page-reports');
+
+  // Inject print-only styles
+  const style = document.createElement('style');
+  style.id = 'print-override';
+  style.textContent = `
+    @media print {
+      body { overflow: visible !important; height: auto !important; background: #fff !important; }
+      .sidebar, .topbar, .quick-actions, #page-reports .section-title { display: none !important; }
+      .main    { overflow: visible !important; }
+      .content { display: none !important; padding: 0 !important; }
+      #page-reports { display: block !important; padding: 20px !important; }
+      #print-header { display: block !important; }
+      * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    }
+  `;
+  document.head.appendChild(style);
+
+  // Inject a print header (hidden on screen, visible on print)
+  const header = document.createElement('div');
+  header.id = 'print-header';
+  header.style.display = 'none';
+  const title = { stock: 'Stock Report', movement: 'Movement Report', warehouse: 'Warehouse Report' }[_currentReport] || 'Report';
+  header.innerHTML = `
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px;">
+      <div style="width:36px;height:36px;background:#2563eb;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:17px;">🏗</div>
+      <div>
+        <div style="font-size:18px;font-weight:800;color:#0f172a;">WareSys — ${title}</div>
+        <div style="font-size:11px;color:#64748b;">Generated on ${new Date().toLocaleString('en-IN')}</div>
+      </div>
+    </div>
+    <hr style="border:none;border-top:2px solid #e2e6f0;margin-bottom:16px;"/>
+  `;
+  rptPage.insertBefore(header, rptPage.firstChild);
+
+  window.print();
+
+  // Cleanup after print dialog closes
+  document.head.removeChild(style);
+  rptPage.removeChild(header);
+}
+
+function exportReportCSV() {
+  if (!_currentReportData.length) { showReport(_currentReport); }
+  if (!_currentReportData.length) { showToast('⚠ Open a report first before exporting.'); return; }
+  const csv  = _currentReportData.map(row => row.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url; a.download = `${_currentReport}-report-${new Date().toISOString().slice(0,10)}.csv`;
+  a.click(); URL.revokeObjectURL(url);
+  showToast(`✅ ${_currentReport} report exported as CSV`);
+}
+
+// ── TRANSFER STOCK ───────────────────────────────────────
+function confirmTransfer() {
+  const productName = document.getElementById('tr-product').value;
+  const qty         = parseInt(document.getElementById('tr-qty').value);
+  const fromWh      = document.getElementById('tr-from').value;
+  const toWh        = document.getElementById('tr-to').value;
+  const fromBin     = document.getElementById('tr-from-bin').value.trim() || '—';
+  const toBin       = document.getElementById('tr-to-bin').value.trim() || '—';
+  const errEl       = document.getElementById('tr-error');
+  errEl.style.display = 'none';
+
+  if (!productName) {
+    errEl.textContent = '⚠ Please select a product.'; errEl.style.display = 'block'; return;
+  }
+  if (!qty || qty <= 0) {
+    errEl.textContent = '⚠ Please enter a valid quantity.'; errEl.style.display = 'block'; return;
+  }
+  if (fromWh === toWh) {
+    errEl.textContent = '⚠ From and To warehouses must be different.'; errEl.style.display = 'block'; return;
+  }
+
+  const fromCode = fromWh.replace('Warehouse ', 'WH').replace(/\s/g, '');
+  const toCode   = toWh.replace('Warehouse ', 'WH').replace(/\s/g, '');
+
+  // Find the product row in inventory matching the FROM warehouse
+  const invRows = document.querySelectorAll('#page-inventory tbody tr');
+  let sourceRow = null;
+  for (let r of invRows) {
+    const name = r.cells[0]?.querySelector('strong')?.textContent?.trim() || '';
+    const wh   = (r.dataset.wh || r.cells[2]?.textContent || '').trim();
+    if (name === productName && wh === fromCode) { sourceRow = r; break; }
+  }
+
+  // If not found by warehouse match, fall back to product name only
+  if (!sourceRow) {
+    for (let r of invRows) {
+      const name = r.cells[0]?.querySelector('strong')?.textContent?.trim() || '';
+      if (name === productName) { sourceRow = r; break; }
+    }
+  }
+
+  if (!sourceRow) {
+    errEl.textContent = `⚠ "${productName}" not found in inventory.`; errEl.style.display = 'block'; return;
+  }
+
+  const currentQty = parseInt((sourceRow.cells[5]?.textContent || '0').replace(/,/g, '')) || 0;
+  if (qty > currentQty) {
+    errEl.textContent = `⚠ Only ${currentQty.toLocaleString()} units available in ${fromCode}.`; errEl.style.display = 'block'; return;
+  }
+
+  // Check destination capacity
+  let toCapacity = 0, toCurrentUnits = 0;
+  document.querySelectorAll('#wh-table tbody tr').forEach(r => {
+    const code = 'WH' + (r.cells[0]?.querySelector('strong')?.textContent || '').replace(/\D/g, '');
+    if (code === toCode) toCapacity = parseInt((r.dataset.bins || r.cells[4]?.textContent || '0').replace(/,/g,'')) || 0;
+  });
+  document.querySelectorAll('#page-inventory tbody tr').forEach(r => {
+    const wh  = (r.dataset.wh || r.cells[2]?.textContent || '').trim();
+    const q   = parseInt((r.cells[5]?.textContent || '0').replace(/,/g,'')) || 0;
+    if (wh === toCode) toCurrentUnits += q;
+  });
+  const toSpace = toCapacity - toCurrentUnits;
+  if (toCapacity > 0 && qty > toSpace) {
+    errEl.textContent = toSpace <= 0
+      ? `🚫 "${toWh}" is full — no space available.`
+      : `🚫 "${toWh}" only has ${toSpace.toLocaleString()} units of space remaining.`;
+    errEl.style.display = 'block'; return;
+  }
+
+  // ── Deduct from source row ──
+  const newFromQty = currentQty - qty;
+  sourceRow.cells[5].textContent = newFromQty.toLocaleString();
+  const fromStatus = sourceRow.cells[6];
+  if (newFromQty <= 0)        fromStatus.innerHTML = '<span class="badge badge-out">OUT</span>';
+  else if (newFromQty <= 20)  fromStatus.innerHTML = '<span class="badge badge-low">LOW</span>';
+  else if (newFromQty >= 500) fromStatus.innerHTML = '<span class="badge badge-warn">OVER</span>';
+  else                        fromStatus.innerHTML = '<span class="badge badge-ok">OK</span>';
+  if (newFromQty <= 0) { sourceRow.style.opacity = '0.5'; }
+
+  // ── Add to destination row (find existing or create new) ──
+  let destRow = null;
+  for (let r of invRows) {
+    const name = r.cells[0]?.querySelector('strong')?.textContent?.trim() || '';
+    const wh   = (r.dataset.wh || r.cells[2]?.textContent || '').trim();
+    if (name === productName && wh === toCode) { destRow = r; break; }
+  }
+
+  if (destRow) {
+    const newToQty = (parseInt((destRow.cells[5]?.textContent || '0').replace(/,/g,'')) || 0) + qty;
+    destRow.cells[5].textContent = newToQty.toLocaleString();
+    const toStatus = destRow.cells[6];
+    if (newToQty <= 20)       toStatus.innerHTML = '<span class="badge badge-low">LOW</span>';
+    else if (newToQty >= 500) toStatus.innerHTML = '<span class="badge badge-warn">OVER</span>';
+    else                      toStatus.innerHTML = '<span class="badge badge-ok">OK</span>';
+    destRow.style.opacity = '';
+  } else {
+    // Insert new inventory row for destination
+    const invTbody = document.querySelector('#page-inventory tbody');
+    const tr = document.createElement('tr');
+    tr.dataset.wh = toCode;
+    const badgeHtml = qty <= 20 ? '<span class="badge badge-low">LOW</span>' : qty >= 500 ? '<span class="badge badge-warn">OVER</span>' : '<span class="badge badge-ok">OK</span>';
+    tr.innerHTML = `
+      <td><strong>${productName}</strong></td>
+      <td class="sku">—</td>
+      <td>${toCode}</td>
+      <td>—</td>
+      <td>${toBin}</td>
+      <td>${qty.toLocaleString()}</td>
+      <td>${badgeHtml}</td>
+      <td><button class="row-out-btn" onclick="openStockOutFor('${productName}','${toCode} / ${toBin}')">📤 Stock Out</button></td>
+    `;
+    invTbody.appendChild(tr);
+  }
+
+  // ── Log to movement table ──
+  const movTbody = document.querySelector('#page-movement tbody');
+  if (movTbody) {
+    const today = new Date().toISOString().slice(0, 10);
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="sku">${today}</td>
+      <td><strong>${productName}</strong></td>
+      <td><span class="badge badge-xfer">XFER</span></td>
+      <td>${qty.toLocaleString()}</td>
+      <td class="sku">${fromCode}${fromBin !== '—' ? ' / ' + fromBin : ''}</td>
+      <td class="sku">${toCode}${toBin !== '—' ? ' / ' + toBin : ''}</td>
+      <td class="sku">XFR-${String(Date.now()).slice(-4)}</td>
+    `;
+    movTbody.insertBefore(tr, movTbody.firstChild);
+  }
+
+  // Reset fields
+  ['tr-product','tr-qty','tr-from-bin','tr-to-bin'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+
+  closeModal('transfer');
+  recalcUtilization();
+  showToast(`✅ Transferred ${qty.toLocaleString()} × ${productName} from ${fromCode} → ${toCode}`);
+}
+
+
+document.addEventListener('DOMContentLoaded', () => {
+  const input    = document.getElementById('global-search');
+  const dropdown = document.getElementById('search-dropdown');
+  if (!input || !dropdown) return;
+
+  input.addEventListener('input', () => {
+    const q = input.value.trim().toLowerCase();
+    if (!q) { dropdown.classList.remove('open'); dropdown.innerHTML = ''; return; }
+    runSearch(q);
+  });
+
+  document.addEventListener('click', e => {
+    if (!e.target.closest('.search-dropdown-wrap')) {
+      dropdown.classList.remove('open');
+    }
+  });
+
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Escape') { dropdown.classList.remove('open'); input.blur(); }
+  });
+});
+
+function runSearch(q) {
+  const dropdown = document.getElementById('search-dropdown');
+  const results  = { inventory: [], warehouses: [], movement: [] };
+
+  // Search inventory
+  document.querySelectorAll('#page-inventory tbody tr').forEach(r => {
+    const name  = r.cells[0]?.querySelector('strong')?.textContent || '';
+    const sku   = r.cells[1]?.textContent || '';
+    const wh    = r.cells[2]?.textContent || '';
+    const qty   = r.cells[5]?.textContent || '';
+    const badge = r.cells[6]?.textContent?.trim() || '';
+    if (name.toLowerCase().includes(q) || sku.toLowerCase().includes(q) || wh.toLowerCase().includes(q)) {
+      results.inventory.push({ name, sku, wh, qty, badge });
+    }
+  });
+
+  // Search warehouses
+  document.querySelectorAll('#wh-table tbody tr').forEach(r => {
+    const name = r.cells[0]?.querySelector('strong')?.textContent || '';
+    const loc  = r.cells[1]?.textContent || '';
+    const util = r.cells[5]?.querySelector('.sku')?.textContent || '';
+    if (name.toLowerCase().includes(q) || loc.toLowerCase().includes(q)) {
+      results.warehouses.push({ name, loc, util });
+    }
+  });
+
+  // Search movement
+  document.querySelectorAll('#page-movement tbody tr').forEach(r => {
+    const prod = r.cells[1]?.querySelector('strong')?.textContent || r.cells[1]?.textContent || '';
+    const type = r.cells[2]?.textContent?.trim() || '';
+    const date = r.cells[0]?.textContent || '';
+    if (prod.toLowerCase().includes(q)) {
+      results.movement.push({ prod, type, date });
+    }
+  });
+
+  const total = results.inventory.length + results.warehouses.length + results.movement.length;
+
+  if (total === 0) {
+    dropdown.innerHTML = `<div class="sd-empty">No results for "<strong>${q}</strong>"</div>`;
+    dropdown.classList.add('open');
+    return;
+  }
+
+  let html = '';
+
+  if (results.inventory.length) {
+    html += `<div class="sd-section"><div class="sd-label">Inventory</div>`;
+    results.inventory.slice(0, 5).forEach(i => {
+      const safeName = i.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+      html += `<div class="sd-item" onclick="goToInventory('${safeName}')">
+        <div class="sd-item-icon">📦</div>
+        <div><div class="sd-item-main">${i.name}</div><div class="sd-item-sub">${i.sku} · ${i.wh} · ${i.qty} units · ${i.badge}</div></div>
+      </div>`;
+    });
+    html += `</div>`;
+  }
+
+  if (results.warehouses.length) {
+    html += `<div class="sd-section"><div class="sd-label">Warehouses</div>`;
+    results.warehouses.slice(0, 3).forEach(w => {
+      html += `<div class="sd-item" onclick="navTo('warehouses');closeSearch()">
+        <div class="sd-item-icon">🏗</div>
+        <div><div class="sd-item-main">${w.name}</div><div class="sd-item-sub">${w.loc} · ${w.util} utilization</div></div>
+      </div>`;
+    });
+    html += `</div>`;
+  }
+
+  if (results.movement.length) {
+    html += `<div class="sd-section"><div class="sd-label">Stock Movements</div>`;
+    results.movement.slice(0, 3).forEach(m => {
+      html += `<div class="sd-item" onclick="navTo('movement');closeSearch()">
+        <div class="sd-item-icon">↕</div>
+        <div><div class="sd-item-main">${m.prod}</div><div class="sd-item-sub">${m.type} · ${m.date}</div></div>
+      </div>`;
+    });
+    html += `</div>`;
+  }
+
+  dropdown.innerHTML = html;
+  dropdown.classList.add('open');
+}
+
+function goToInventory(productName) {
+  closeSearch();
+  navTo('inventory');
+  setTimeout(() => {
+    document.querySelectorAll('#page-inventory tbody tr').forEach(r => {
+      const name = r.cells[0]?.querySelector('strong')?.textContent || '';
+      if (name === productName) {
+        r.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        r.style.transition = 'background 0.3s';
+        r.style.background = '#eff6ff';
+        setTimeout(() => { r.style.background = ''; }, 1800);
+      }
+    });
+  }, 100);
+}
+
+function closeSearch() {
+  const input    = document.getElementById('global-search');
+  const dropdown = document.getElementById('search-dropdown');
+  if (input)    input.value = '';
+  if (dropdown) { dropdown.classList.remove('open'); dropdown.innerHTML = ''; }
 }
 
 function openModal(id)  { document.getElementById('modal-'+id).classList.add('open'); }
