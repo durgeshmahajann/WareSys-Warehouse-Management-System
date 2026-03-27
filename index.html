@@ -1433,6 +1433,19 @@ function confirmEditWarehouse() {
   }
 
   const row = _editWhRow;
+
+  // Duplicate name check — skip the row currently being edited
+  const duplicateEdit = Array.from(document.querySelectorAll("#wh-table tbody tr")).some(r => {
+    if (r === row) return false;
+    const nameEl = r.cells[0]?.querySelector("strong");
+    return nameEl && nameEl.textContent.trim().toLowerCase() === name.toLowerCase();
+  });
+  if (duplicateEdit) {
+    errEl.textContent = `🚫 A warehouse named "${name}" already exists. Please use a different name.`;
+    errEl.style.display = "block";
+    document.getElementById("edit-wh-name").focus();
+    return;
+  }
   const util = parseInt(row.dataset.util) || 0;
 
   // Update row cells
@@ -1766,31 +1779,41 @@ function confirmStockIn() {
   }
   // ─────────────────────────────────────────────────────────
 
-  // Update inventory table quantity
-  const invRows = document.querySelectorAll('#page-inventory tbody tr');
+  // ── UPDATE INVENTORY TABLE ───────────────────────────────
+  const whCode2   = warehouse.replace('Warehouse ', 'WH').replace(/\s/g, '');
+  const invTbody  = document.querySelector('#page-inventory tbody');
+  const invRows   = invTbody ? invTbody.querySelectorAll('tr') : [];
+  let   matched   = false;
+
   for (let row of invRows) {
     const nameCell = row.querySelector('td:first-child strong');
     if (!nameCell || nameCell.textContent.trim() !== productName) continue;
 
+    matched = true;
     const qtyCell = row.cells[5];
     const newQty  = (parseInt(qtyCell.textContent.replace(/,/g,'')) || 0) + qty;
     qtyCell.textContent = newQty.toLocaleString();
 
-    // Update warehouse & bin if they were blank (new product)
-    if (row.cells[2].textContent === '—') row.cells[2].textContent = warehouse.replace('Warehouse ','WH');
-    if (row.cells[4].textContent === '—') row.cells[4].textContent = bin;
+    // Update warehouse & bin if they were blank
+    if (!row.cells[2].textContent.trim() || row.cells[2].textContent.trim() === '—') {
+      row.cells[2].textContent = whCode2;
+      row.dataset.wh = whCode2;
+    }
+    if (!row.cells[4].textContent.trim() || row.cells[4].textContent.trim() === '—') {
+      row.cells[4].textContent = bin;
+    }
 
-    // Re-enable row-out-btn
+    // Re-enable Stock Out button
     const rowBtn = row.querySelector('.row-out-btn');
     if (rowBtn) {
       rowBtn.disabled = false;
       rowBtn.textContent = '📤 Stock Out';
       rowBtn.style.pointerEvents = '';
-      rowBtn.onclick = () => openStockOutFor(productName, `${warehouse.replace('Warehouse ','WH')} / ${bin}`);
+      rowBtn.onclick = () => openStockOutFor(productName, `${whCode2} / ${bin}`);
     }
     row.style.opacity = '';
 
-    // Recalc status badge
+    // Update status badge
     const statusCell = row.cells[6];
     if (newQty <= 0)        statusCell.innerHTML = '<span class="badge badge-out">OUT</span>';
     else if (newQty <= 20)  statusCell.innerHTML = '<span class="badge badge-low">LOW</span>';
@@ -1799,13 +1822,55 @@ function confirmStockIn() {
     break;
   }
 
+  // If product not found in inventory at all — insert a new row
+  if (!matched && invTbody) {
+    const badgeHtml = qty <= 0
+      ? '<span class="badge badge-out">OUT</span>'
+      : qty <= 20
+        ? '<span class="badge badge-low">LOW</span>'
+        : qty >= 500
+          ? '<span class="badge badge-warn">OVER</span>'
+          : '<span class="badge badge-ok">OK</span>';
+
+    const tr = document.createElement('tr');
+    tr.dataset.wh = whCode2;
+    tr.innerHTML = `
+      <td><strong>${productName}</strong></td>
+      <td class="sku">—</td>
+      <td>${whCode2}</td>
+      <td>—</td>
+      <td>${bin}</td>
+      <td>${qty.toLocaleString()}</td>
+      <td>${badgeHtml}</td>
+      <td><button class="row-out-btn" onclick="openStockOutFor('${productName}','${whCode2} / ${bin}')">📤 Stock Out</button></td>
+    `;
+    invTbody.appendChild(tr);
+  }
+
+  // ── LOG TO STOCK MOVEMENT TABLE ──────────────────────────
+  const movTbody = document.querySelector('#page-movement tbody');
+  if (movTbody) {
+    const today = new Date().toISOString().slice(0, 10);
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="sku">${today}</td>
+      <td><strong>${productName}</strong></td>
+      <td><span class="badge badge-in">IN</span></td>
+      <td>+${qty.toLocaleString()}</td>
+      <td>—</td>
+      <td class="sku">${whCode2}${bin !== '—' ? ' / ' + bin : ''}</td>
+      <td class="sku">${supplier}</td>
+    `;
+    movTbody.insertBefore(tr, movTbody.firstChild);
+  }
+
   // Reset fields
   document.getElementById('si-qty').value = '';
   document.getElementById('si-bin').value = '';
 
   closeModal('stockIn');
   recalcUtilization();
-  showToast(`✅ Stocked in ${qty} × ${productName} from ${supplier}`);
+  showToast(`✅ Stocked in ${qty.toLocaleString()} × ${productName} → ${whCode2}`);
 }
 
 function openModal(id)  { document.getElementById('modal-'+id).classList.add('open'); }
