@@ -23,6 +23,7 @@ router.get('/', async (req, res) => {
     else if (qty >= 500)       status = 'OVER';
     else if (qty > 20)         status = 'OK';
     return {
+      _id:       i._id,
       id:        i._id,
       product:   i.product,
       warehouse: i.warehouse,
@@ -48,6 +49,13 @@ router.get('/:id', async (req, res) => {
     .populate('warehouse', 'name location');
   if (!item) return res.status(404).json({ success: false, message: 'Inventory record not found.' });
   res.json({ success: true, data: item });
+});
+
+// DELETE /api/inventory/:id
+router.delete('/:id', async (req, res) => {
+  const item = await Inventory.findByIdAndDelete(req.params.id);
+  if (!item) return res.status(404).json({ success: false, message: 'Inventory record not found.' });
+  res.json({ success: true, message: 'Inventory record deleted.' });
 });
 
 module.exports = router;

@@ -34,7 +34,7 @@ warehouseSchema.virtual('capacity').get(function () {
 const productSchema = new mongoose.Schema({
   name:     { type: String, required: true },
   sku:      { type: String, required: true, unique: true },
-  category: { type: String, enum: ['Fasteners', 'Plumbing', 'Electrical', 'Seals', 'Other'], default: 'Other' },
+  category: { type: String, default: 'Other' },
   unit:     { type: String, default: 'pcs' }
 }, { timestamps: true });
 

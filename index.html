@@ -425,6 +425,22 @@ tbody tr:last-child td { border-bottom: none; }
   transform: translateY(-1px);
 }
 
+/* ROW DELETE BUTTON */
+.row-delete-btn {
+  padding: 5px 11px; border-radius: 6px;
+  border: 1.5px solid #fecaca; background: #fff5f5;
+  color: var(--accent3); font-family: var(--syne);
+  font-size: 11px; font-weight: 700; cursor: pointer;
+  transition: all 0.13s; white-space: nowrap;
+  display: inline-flex; align-items: center; gap: 4px;
+}
+.row-delete-btn:hover {
+  background: var(--accent3); color: #fff;
+  border-color: var(--accent3);
+  box-shadow: 0 2px 8px rgba(239,68,68,0.25);
+  transform: translateY(-1px);
+}
+
 /* ROW EDIT BUTTON */
 .row-edit-btn {
   padding: 5px 11px; border-radius: 6px;
@@ -543,7 +559,7 @@ tbody tr:last-child td { border-bottom: none; }
     <div class="nav-section">
       <div class="nav-label">Operations</div>
       <div class="nav-item" onclick="showPage('movement',this)"><span class="icon">↕</span> Stock Movement</div>
-      <div class="nav-item" onclick="showPage('orders',this)"><span class="icon">📋</span> Orders <span class="nav-badge">3</span></div>
+      <div class="nav-item" onclick="showPage('orders',this)"><span class="icon">📋</span> Orders</div>
       <div class="nav-item" onclick="showPage('reports',this)"><span class="icon">📊</span> Reports</div>
     </div>
     <div class="nav-section">
@@ -630,25 +646,25 @@ tbody tr:last-child td { border-bottom: none; }
       <div class="card">
         <div class="table-wrap">
         <table id="wh-table">
-          <thead><tr><th>Name</th><th>Location</th><th>Sections</th><th>Racks</th><th>Bins</th><th>Utilization</th><th>Status</th><th>Edit</th></tr></thead>
+          <thead><tr><th>Name</th><th>Location</th><th>Sections</th><th>Racks</th><th>Bins</th><th>Utilization</th><th>Status</th><th>Actions</th></tr></thead>
           <tbody>
             <tr data-sections="6" data-racks="24" data-bins="1512" data-util="82">
               <td><strong>Warehouse 1</strong></td><td class="sku">Mumbai North</td><td>6</td><td>24</td><td>1,512</td>
               <td><div class="qty-bar-wrap"><div class="qty-bar" style="max-width:80px"><div class="qty-bar-fill" style="width:82%;background:var(--accent)"></div></div><span class="sku">82%</span></div></td>
               <td><span class="badge badge-ok">ACTIVE</span></td>
-              <td><button class="row-edit-btn" onclick="openEditWarehouse(this)">✏ Edit</button></td>
+              <td style="display:flex;gap:6px"><button class="row-edit-btn" onclick="openEditWarehouse(this)">✏ Edit</button><button class="row-delete-btn" onclick="deleteWarehouse(this)">🗑 Delete</button></td>
             </tr>
             <tr data-sections="4" data-racks="18" data-bins="1200" data-util="54">
               <td><strong>Warehouse 2</strong></td><td class="sku">Pune Central</td><td>4</td><td>18</td><td>1,200</td>
               <td><div class="qty-bar-wrap"><div class="qty-bar" style="max-width:80px"><div class="qty-bar-fill" style="width:54%;background:var(--accent4)"></div></div><span class="sku">54%</span></div></td>
               <td><span class="badge badge-ok">ACTIVE</span></td>
-              <td><button class="row-edit-btn" onclick="openEditWarehouse(this)">✏ Edit</button></td>
+              <td style="display:flex;gap:6px"><button class="row-edit-btn" onclick="openEditWarehouse(this)">✏ Edit</button><button class="row-delete-btn" onclick="deleteWarehouse(this)">🗑 Delete</button></td>
             </tr>
             <tr data-sections="3" data-racks="12" data-bins="1000" data-util="91">
               <td><strong>Warehouse 3</strong></td><td class="sku">Nashik Depot</td><td>3</td><td>12</td><td>1,000</td>
               <td><div class="qty-bar-wrap"><div class="qty-bar" style="max-width:80px"><div class="qty-bar-fill" style="width:91%;background:var(--accent3)"></div></div><span class="sku">91%</span></div></td>
               <td><span class="badge badge-warn">NEAR FULL</span></td>
-              <td><button class="row-edit-btn" onclick="openEditWarehouse(this)">✏ Edit</button></td>
+              <td style="display:flex;gap:6px"><button class="row-edit-btn" onclick="openEditWarehouse(this)">✏ Edit</button><button class="row-delete-btn" onclick="deleteWarehouse(this)">🗑 Delete</button></td>
             </tr>
           </tbody>
         </table>
@@ -661,17 +677,19 @@ tbody tr:last-child td { border-bottom: none; }
       <div class="section-title">📦 Products</div>
       <div style="margin-bottom:16px"><button class="btn btn-accent" onclick="openModal('addProduct')">+ Add Product</button></div>
       <div class="card">
+        <div class="table-wrap">
         <table>
-          <thead><tr><th>Name</th><th>SKU</th><th>Category</th><th>Location</th><th>Total Qty</th><th>Status</th></tr></thead>
+          <thead><tr><th>Name</th><th>SKU</th><th>Category</th><th>Unit</th><th>Total Qty</th><th>Status</th><th>Actions</th></tr></thead>
           <tbody>
-            <tr><td><strong>Steel Bolt M10</strong></td><td class="sku">SKU-00421</td><td>Fasteners</td><td class="sku">WH1/R-A/B-03</td><td>320</td><td><span class="badge badge-ok">OK</span></td></tr>
-            <tr><td><strong>Hex Nut M8</strong></td><td class="sku">SKU-00519</td><td>Fasteners</td><td class="sku">WH1/R-B/B-07</td><td>18</td><td><span class="badge badge-low">LOW</span></td></tr>
-            <tr><td><strong>PVC Pipe 2in</strong></td><td class="sku">SKU-01023</td><td>Plumbing</td><td class="sku">WH2/R-C/B-01</td><td>540</td><td><span class="badge badge-warn">OVER</span></td></tr>
-            <tr><td><strong>Cable Tie 30cm</strong></td><td class="sku">SKU-00872</td><td>Electrical</td><td class="sku">WH1/R-A/B-09</td><td>1,200</td><td><span class="badge badge-ok">OK</span></td></tr>
-            <tr><td><strong>Rubber Gasket A</strong></td><td class="sku">SKU-00334</td><td>Seals</td><td class="sku">WH3/R-D/B-02</td><td>7</td><td><span class="badge badge-low">LOW</span></td></tr>
-            <tr><td><strong>Copper Elbow 45°</strong></td><td class="sku">SKU-00612</td><td>Plumbing</td><td class="sku">WH2/R-A/B-05</td><td>95</td><td><span class="badge badge-ok">OK</span></td></tr>
+            <tr><td><strong>Steel Bolt M10</strong></td><td class="sku">SKU-00421</td><td>Fasteners</td><td class="sku">pcs</td><td>320</td><td><span class="badge badge-ok">OK</span></td><td style="display:flex;gap:6px"><button class="row-edit-btn" onclick="openEditProduct(this)">✏ Edit</button><button class="row-delete-btn" onclick="deleteProduct(this)">🗑 Delete</button></td></tr>
+            <tr><td><strong>Hex Nut M8</strong></td><td class="sku">SKU-00519</td><td>Fasteners</td><td class="sku">pcs</td><td>18</td><td><span class="badge badge-low">LOW</span></td><td style="display:flex;gap:6px"><button class="row-edit-btn" onclick="openEditProduct(this)">✏ Edit</button><button class="row-delete-btn" onclick="deleteProduct(this)">🗑 Delete</button></td></tr>
+            <tr><td><strong>PVC Pipe 2in</strong></td><td class="sku">SKU-01023</td><td>Plumbing</td><td class="sku">m</td><td>540</td><td><span class="badge badge-warn">OVER</span></td><td style="display:flex;gap:6px"><button class="row-edit-btn" onclick="openEditProduct(this)">✏ Edit</button><button class="row-delete-btn" onclick="deleteProduct(this)">🗑 Delete</button></td></tr>
+            <tr><td><strong>Cable Tie 30cm</strong></td><td class="sku">SKU-00872</td><td>Electrical</td><td class="sku">pcs</td><td>1,200</td><td><span class="badge badge-ok">OK</span></td><td style="display:flex;gap:6px"><button class="row-edit-btn" onclick="openEditProduct(this)">✏ Edit</button><button class="row-delete-btn" onclick="deleteProduct(this)">🗑 Delete</button></td></tr>
+            <tr><td><strong>Rubber Gasket A</strong></td><td class="sku">SKU-00334</td><td>Seals</td><td class="sku">pcs</td><td>7</td><td><span class="badge badge-low">LOW</span></td><td style="display:flex;gap:6px"><button class="row-edit-btn" onclick="openEditProduct(this)">✏ Edit</button><button class="row-delete-btn" onclick="deleteProduct(this)">🗑 Delete</button></td></tr>
+            <tr><td><strong>Copper Elbow 45°</strong></td><td class="sku">SKU-00612</td><td>Plumbing</td><td class="sku">pcs</td><td>95</td><td><span class="badge badge-ok">OK</span></td><td style="display:flex;gap:6px"><button class="row-edit-btn" onclick="openEditProduct(this)">✏ Edit</button><button class="row-delete-btn" onclick="deleteProduct(this)">🗑 Delete</button></td></tr>
           </tbody>
         </table>
+        </div>
       </div>
     </div>
 
@@ -688,14 +706,14 @@ tbody tr:last-child td { border-bottom: none; }
       <div class="card">
         <div class="table-wrap">
         <table>
-          <thead><tr><th>Product</th><th>SKU</th><th>Warehouse</th><th>Rack</th><th>Bin</th><th>Quantity</th><th>Status</th><th>Stock Out</th></tr></thead>
+          <thead><tr><th>Product</th><th>SKU</th><th>Warehouse</th><th>Rack</th><th>Bin</th><th>Quantity</th><th>Status</th><th>Actions</th></tr></thead>
           <tbody>
-            <tr data-wh="WH1"><td><strong>Steel Bolt M10</strong></td><td class="sku">SKU-00421</td><td>WH1</td><td>Rack A</td><td>Bin 03</td><td>320</td><td><span class="badge badge-ok">OK</span></td><td><button class="row-out-btn" onclick="openStockOutFor('Steel Bolt M10','WH1 / Rack A / Bin 03')">📤 Stock Out</button></td></tr>
-            <tr data-wh="WH1"><td><strong>Hex Nut M8</strong></td><td class="sku">SKU-00519</td><td>WH1</td><td>Rack B</td><td>Bin 07</td><td>18</td><td><span class="badge badge-low">LOW</span></td><td><button class="row-out-btn" onclick="openStockOutFor('Hex Nut M8','WH1 / Rack B / Bin 07')">📤 Stock Out</button></td></tr>
-            <tr data-wh="WH2"><td><strong>PVC Pipe 2in</strong></td><td class="sku">SKU-01023</td><td>WH2</td><td>Rack C</td><td>Bin 01</td><td>540</td><td><span class="badge badge-warn">OVER</span></td><td><button class="row-out-btn" onclick="openStockOutFor('PVC Pipe 2in','WH2 / Rack C / Bin 01')">📤 Stock Out</button></td></tr>
-            <tr data-wh="WH1"><td><strong>Cable Tie 30cm</strong></td><td class="sku">SKU-00872</td><td>WH1</td><td>Rack A</td><td>Bin 09</td><td>1,200</td><td><span class="badge badge-ok">OK</span></td><td><button class="row-out-btn" onclick="openStockOutFor('Cable Tie 30cm','WH1 / Rack A / Bin 09')">📤 Stock Out</button></td></tr>
-            <tr data-wh="WH3"><td><strong>Rubber Gasket A</strong></td><td class="sku">SKU-00334</td><td>WH3</td><td>Rack D</td><td>Bin 02</td><td>7</td><td><span class="badge badge-low">LOW</span></td><td><button class="row-out-btn" onclick="openStockOutFor('Rubber Gasket A','WH3 / Rack D / Bin 02')">📤 Stock Out</button></td></tr>
-            <tr data-wh="WH2"><td><strong>Copper Elbow 45°</strong></td><td class="sku">SKU-00612</td><td>WH2</td><td>Rack A</td><td>Bin 05</td><td>95</td><td><span class="badge badge-ok">OK</span></td><td><button class="row-out-btn" onclick="openStockOutFor('Copper Elbow 45°','WH2 / Rack A / Bin 05')">📤 Stock Out</button></td></tr>
+            <tr data-wh="WH1"><td><strong>Steel Bolt M10</strong></td><td class="sku">SKU-00421</td><td>WH1</td><td>Rack A</td><td>Bin 03</td><td>320</td><td><span class="badge badge-ok">OK</span></td><td style="display:flex;gap:6px"><button class="row-out-btn" onclick="openStockOutFor('Steel Bolt M10','WH1 / Rack A / Bin 03')">📤 Stock Out</button><button class="row-delete-btn" onclick="deleteInventory(this)">🗑 Delete</button></td></tr>
+            <tr data-wh="WH1"><td><strong>Hex Nut M8</strong></td><td class="sku">SKU-00519</td><td>WH1</td><td>Rack B</td><td>Bin 07</td><td>18</td><td><span class="badge badge-low">LOW</span></td><td style="display:flex;gap:6px"><button class="row-out-btn" onclick="openStockOutFor('Hex Nut M8','WH1 / Rack B / Bin 07')">📤 Stock Out</button><button class="row-delete-btn" onclick="deleteInventory(this)">🗑 Delete</button></td></tr>
+            <tr data-wh="WH2"><td><strong>PVC Pipe 2in</strong></td><td class="sku">SKU-01023</td><td>WH2</td><td>Rack C</td><td>Bin 01</td><td>540</td><td><span class="badge badge-warn">OVER</span></td><td style="display:flex;gap:6px"><button class="row-out-btn" onclick="openStockOutFor('PVC Pipe 2in','WH2 / Rack C / Bin 01')">📤 Stock Out</button><button class="row-delete-btn" onclick="deleteInventory(this)">🗑 Delete</button></td></tr>
+            <tr data-wh="WH1"><td><strong>Cable Tie 30cm</strong></td><td class="sku">SKU-00872</td><td>WH1</td><td>Rack A</td><td>Bin 09</td><td>1,200</td><td><span class="badge badge-ok">OK</span></td><td style="display:flex;gap:6px"><button class="row-out-btn" onclick="openStockOutFor('Cable Tie 30cm','WH1 / Rack A / Bin 09')">📤 Stock Out</button><button class="row-delete-btn" onclick="deleteInventory(this)">🗑 Delete</button></td></tr>
+            <tr data-wh="WH3"><td><strong>Rubber Gasket A</strong></td><td class="sku">SKU-00334</td><td>WH3</td><td>Rack D</td><td>Bin 02</td><td>7</td><td><span class="badge badge-low">LOW</span></td><td style="display:flex;gap:6px"><button class="row-out-btn" onclick="openStockOutFor('Rubber Gasket A','WH3 / Rack D / Bin 02')">📤 Stock Out</button><button class="row-delete-btn" onclick="deleteInventory(this)">🗑 Delete</button></td></tr>
+            <tr data-wh="WH2"><td><strong>Copper Elbow 45°</strong></td><td class="sku">SKU-00612</td><td>WH2</td><td>Rack A</td><td>Bin 05</td><td>95</td><td><span class="badge badge-ok">OK</span></td><td style="display:flex;gap:6px"><button class="row-out-btn" onclick="openStockOutFor('Copper Elbow 45°','WH2 / Rack A / Bin 05')">📤 Stock Out</button><button class="row-delete-btn" onclick="deleteInventory(this)">🗑 Delete</button></td></tr>
           </tbody>
         </table>
         </div>
@@ -783,10 +801,73 @@ tbody tr:last-child td { border-bottom: none; }
 <div class="modal-overlay" id="modal-addProduct">
   <div class="modal">
     <div class="modal-title">📦 Add Product</div><div class="modal-sub">PRODUCT_MANAGEMENT · NEW_ITEM</div>
-    <div class="form-row"><div class="form-group"><label class="form-label">Product Name</label><input class="form-input" placeholder="e.g. Steel Bolt M12"/></div><div class="form-group"><label class="form-label">SKU</label><input class="form-input" placeholder="SKU-XXXXX" style="font-family:var(--mono)"/></div></div>
-    <div class="form-row"><div class="form-group"><label class="form-label">Category</label><select class="form-input"><option>Fasteners</option><option>Plumbing</option><option>Electrical</option><option>Seals</option><option>Other</option></select></div><div class="form-group"><label class="form-label">Initial Qty</label><input class="form-input" type="number" placeholder="0"/></div></div>
-    <div class="form-row"><div class="form-group"><label class="form-label">Warehouse</label><select class="form-input"><option>Warehouse 1</option><option>Warehouse 2</option><option>Warehouse 3</option></select></div><div class="form-group"><label class="form-label">Bin Location</label><input class="form-input" placeholder="R-A / B-01" style="font-family:var(--mono)"/></div></div>
-    <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal('addProduct')">Cancel</button><button class="btn btn-accent" onclick="closeModal('addProduct')">Add Product</button></div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Product Name</label><input class="form-input" id="ap-name" placeholder="e.g. Steel Bolt M12"/></div>
+      <div class="form-group"><label class="form-label">SKU</label><input class="form-input" id="ap-sku" placeholder="SKU-XXXXX" style="font-family:var(--mono)"/></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Category</label>
+        <select class="form-input" id="ap-category" onchange="toggleCustomCategory('ap-custom-category',this)">
+          <option value="Fasteners">Fasteners</option>
+          <option value="Plumbing">Plumbing</option>
+          <option value="Electrical">Electrical</option>
+          <option value="Seals &amp; Gaskets">Seals &amp; Gaskets</option>
+          <option value="Pipes &amp; Fittings">Pipes &amp; Fittings</option>
+          <option value="Tools &amp; Equipment">Tools &amp; Equipment</option>
+          <option value="Safety &amp; PPE">Safety &amp; PPE</option>
+          <option value="Packaging Materials">Packaging Materials</option>
+          <option value="Raw Materials">Raw Materials</option>
+          <option value="Adhesives &amp; Lubricants">Adhesives &amp; Lubricants</option>
+          <option value="Electronics &amp; Components">Electronics &amp; Components</option>
+          <option value="Hardware">Hardware</option>
+          <option value="custom">＋ Custom Category…</option>
+        </select>
+        <input class="form-input" id="ap-custom-category" placeholder="Enter custom category" style="display:none;margin-top:8px;"/>
+      </div>
+      <div class="form-group"><label class="form-label">Unit</label><input class="form-input" id="ap-unit" placeholder="e.g. pcs, kg, m"/></div>
+    </div>
+    <div id="ap-error" style="display:none;background:#fef2f2;border:1px solid #fecaca;border-radius:7px;padding:9px 13px;font-size:12px;color:var(--accent3);margin-top:4px;"></div>
+    <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal('addProduct')">Cancel</button><button class="btn btn-accent" onclick="confirmAddProduct()">📦 Add Product</button></div>
+  </div>
+</div>
+
+<!-- EDIT PRODUCT MODAL -->
+<div class="modal-overlay" id="modal-editProduct">
+  <div class="modal">
+    <div class="modal-title">✏ Edit Product</div>
+    <div class="modal-sub" id="edit-prod-sub">PRODUCT_MANAGEMENT · EDIT_ITEM</div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Product Name</label><input class="form-input" id="ep-name" placeholder="e.g. Steel Bolt M12"/></div>
+      <div class="form-group"><label class="form-label">SKU</label><input class="form-input" id="ep-sku" placeholder="SKU-XXXXX" style="font-family:var(--mono)"/></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Category</label>
+        <select class="form-input" id="ep-category" onchange="toggleCustomCategory('ep-custom-category',this)">
+          <option value="Fasteners">Fasteners</option>
+          <option value="Plumbing">Plumbing</option>
+          <option value="Electrical">Electrical</option>
+          <option value="Seals &amp; Gaskets">Seals &amp; Gaskets</option>
+          <option value="Pipes &amp; Fittings">Pipes &amp; Fittings</option>
+          <option value="Tools &amp; Equipment">Tools &amp; Equipment</option>
+          <option value="Safety &amp; PPE">Safety &amp; PPE</option>
+          <option value="Packaging Materials">Packaging Materials</option>
+          <option value="Raw Materials">Raw Materials</option>
+          <option value="Adhesives &amp; Lubricants">Adhesives &amp; Lubricants</option>
+          <option value="Electronics &amp; Components">Electronics &amp; Components</option>
+          <option value="Hardware">Hardware</option>
+          <option value="custom">＋ Custom Category…</option>
+        </select>
+        <input class="form-input" id="ep-custom-category" placeholder="Enter custom category" style="display:none;margin-top:8px;"/>
+      </div>
+      <div class="form-group"><label class="form-label">Unit</label><input class="form-input" id="ep-unit" placeholder="e.g. pcs, kg, m"/></div>
+    </div>
+    <div id="ep-error" style="display:none;background:#fef2f2;border:1px solid #fecaca;border-radius:7px;padding:9px 13px;font-size:12px;color:var(--accent3);margin-bottom:8px;"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('editProduct')">Cancel</button>
+      <button class="btn btn-accent" onclick="confirmEditProduct()">💾 Save Changes</button>
+    </div>
   </div>
 </div>
 
@@ -879,13 +960,22 @@ tbody tr:last-child td { border-bottom: none; }
       <div class="form-row">
         <div class="form-group" style="margin-bottom:10px">
           <label class="form-label">Category</label>
-          <select class="form-input" id="si-new-product-category">
-            <option>Fasteners</option>
-            <option>Plumbing</option>
-            <option>Electrical</option>
-            <option>Seals</option>
-            <option>Other</option>
+          <select class="form-input" id="si-new-product-category" onchange="toggleCustomCategory('si-new-product-custom-category',this)">
+            <option value="Fasteners">Fasteners</option>
+            <option value="Plumbing">Plumbing</option>
+            <option value="Electrical">Electrical</option>
+            <option value="Seals &amp; Gaskets">Seals &amp; Gaskets</option>
+            <option value="Pipes &amp; Fittings">Pipes &amp; Fittings</option>
+            <option value="Tools &amp; Equipment">Tools &amp; Equipment</option>
+            <option value="Safety &amp; PPE">Safety &amp; PPE</option>
+            <option value="Packaging Materials">Packaging Materials</option>
+            <option value="Raw Materials">Raw Materials</option>
+            <option value="Adhesives &amp; Lubricants">Adhesives &amp; Lubricants</option>
+            <option value="Electronics &amp; Components">Electronics &amp; Components</option>
+            <option value="Hardware">Hardware</option>
+            <option value="custom">＋ Custom Category…</option>
           </select>
+          <input class="form-input" id="si-new-product-custom-category" placeholder="Enter custom category" style="display:none;margin-top:6px;"/>
         </div>
         <div class="form-group" style="margin-bottom:10px">
           <label class="form-label">Unit</label>
@@ -1357,11 +1447,12 @@ async function loadInventoryTable() {
           <td>${item.bin || '—'}</td>
           <td>${item.quantity.toLocaleString()}</td>
           <td><span class="badge ${badgeClass}">${item.status}</span></td>
-          <td>
+          <td style="display:flex;gap:6px">
             <button class="row-out-btn"
               onclick="openStockOutFor('${(item.product?.name||'').replace(/'/g,"\\'")}','${item.warehouse?.name || ''}','${item.product?._id}','${item.warehouse?._id}')">
               📤 Stock Out
             </button>
+            <button class="row-delete-btn" onclick="deleteInventory(this)" data-id="${item._id}">🗑 Delete</button>
           </td>`;
         tbody.appendChild(tr);
       });
@@ -1507,7 +1598,10 @@ async function loadWarehousesPage() {
           </div>
         </td>
         <td>${badgeHtml}</td>
-        <td><button class="row-edit-btn" onclick="openEditWarehouse(this)">✏ Edit</button></td>`;
+        <td style="display:flex;gap:6px">
+          <button class="row-edit-btn" onclick="openEditWarehouse(this)">✏ Edit</button>
+          <button class="row-delete-btn" onclick="deleteWarehouse(this)">🗑 Delete</button>
+        </td>`;
       tbody.appendChild(tr);
     });
   } catch (err) { console.error('Warehouses page:', err); }
@@ -1522,13 +1616,18 @@ async function loadProductsPage() {
     data.forEach(p => {
       const badgeClass = { OK:'badge-ok', LOW:'badge-low', OVER:'badge-warn', OUT:'badge-out' }[p.status] || 'badge-ok';
       const tr = document.createElement('tr');
+      tr.dataset.id = p._id || p.id || '';
       tr.innerHTML = `
         <td><strong>${p.name}</strong></td>
         <td class="sku">${p.sku}</td>
         <td>${p.category}</td>
-        <td class="sku">—</td>
+        <td class="sku">${p.unit || '—'}</td>
         <td>${p.totalQty.toLocaleString()}</td>
-        <td><span class="badge ${badgeClass}">${p.status}</span></td>`;
+        <td><span class="badge ${badgeClass}">${p.status}</span></td>
+        <td style="display:flex;gap:6px">
+          <button class="row-edit-btn" onclick="openEditProduct(this)">✏ Edit</button>
+          <button class="row-delete-btn" onclick="deleteProduct(this)">🗑 Delete</button>
+        </td>`;
       tbody.appendChild(tr);
     });
   } catch (err) { console.error('Products page:', err); }
@@ -1638,6 +1737,146 @@ async function populateSupplierDropdown() {
 }
 
 // ══════════════════════════════════════════════════════════
+// CATEGORY HELPER
+// ══════════════════════════════════════════════════════════
+
+function toggleCustomCategory(inputId, selectEl) {
+  const customInput = document.getElementById(inputId);
+  if (!customInput) return;
+  if (selectEl.value === 'custom') {
+    customInput.style.display = 'block';
+    customInput.focus();
+  } else {
+    customInput.style.display = 'none';
+    customInput.value = '';
+  }
+}
+
+function resolveCategory(selectId, customInputId) {
+  const sel = document.getElementById(selectId);
+  if (!sel) return '';
+  if (sel.value === 'custom') {
+    const custom = document.getElementById(customInputId)?.value.trim();
+    return custom || '';
+  }
+  return sel.value;
+}
+
+// ══════════════════════════════════════════════════════════
+// ADD PRODUCT (from topbar / quick actions modal)
+// ══════════════════════════════════════════════════════════
+
+async function confirmAddProduct() {
+  const name     = document.getElementById('ap-name').value.trim();
+  const sku      = document.getElementById('ap-sku').value.trim();
+  const category = resolveCategory('ap-category', 'ap-custom-category');
+  const unit     = document.getElementById('ap-unit').value.trim() || 'pcs';
+  const errEl    = document.getElementById('ap-error');
+  errEl.style.display = 'none';
+
+  if (!name)     { errEl.textContent = '⚠ Product name is required.'; errEl.style.display = 'block'; return; }
+  if (!sku)      { errEl.textContent = '⚠ SKU is required.';          errEl.style.display = 'block'; return; }
+  if (!category) { errEl.textContent = '⚠ Please enter a custom category name.'; errEl.style.display = 'block'; return; }
+
+  try {
+    const { data } = await apiFetch('/products', {
+      method: 'POST',
+      body: JSON.stringify({ name, sku, category, unit })
+    });
+
+    // Add to all product selects so it's immediately available in other modals
+    ['si-product', 'so-product', 'tr-product'].forEach(id => {
+      const sel = document.getElementById(id);
+      if (!sel) return;
+      const opt = document.createElement('option');
+      opt.value = data._id || data.id;
+      opt.textContent = data.name;
+      sel.appendChild(opt);
+    });
+
+    // Clear fields
+    ['ap-name', 'ap-sku', 'ap-unit', 'ap-custom-category'].forEach(id => { document.getElementById(id).value = ''; });
+    document.getElementById('ap-category').value = 'Fasteners';
+    document.getElementById('ap-custom-category').style.display = 'none';
+
+    closeModal('addProduct');
+    await loadProductsPage();
+    showToast(`✅ Product "${name}" added successfully`);
+  } catch (err) {
+    errEl.textContent = '⚠ ' + err.message;
+    errEl.style.display = 'block';
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+// EDIT PRODUCT
+// ══════════════════════════════════════════════════════════
+
+let _editProductId = null;
+
+function openEditProduct(btn) {
+  const row = btn.closest('tr');
+  _editProductId = row.dataset.id || null;
+
+  const name     = row.cells[0]?.querySelector('strong')?.textContent || '';
+  const sku      = row.cells[1]?.textContent || '';
+  const category = row.cells[2]?.textContent || '';
+  const unit     = row.cells[3]?.textContent || '';
+
+  document.getElementById('ep-name').value = name;
+  document.getElementById('ep-sku').value  = sku;
+  document.getElementById('ep-unit').value = unit;
+  document.getElementById('ep-error').style.display = 'none';
+  document.getElementById('ep-custom-category').style.display = 'none';
+  document.getElementById('ep-custom-category').value = '';
+  document.getElementById('edit-prod-sub').textContent = name.toUpperCase() + ' · EDIT_ITEM';
+
+  // Try to match category to a known option, else show as custom
+  const catSel = document.getElementById('ep-category');
+  const matchOpt = Array.from(catSel.options).find(o => o.value === category);
+  if (matchOpt) {
+    catSel.value = category;
+  } else if (category) {
+    catSel.value = 'custom';
+    document.getElementById('ep-custom-category').style.display = 'block';
+    document.getElementById('ep-custom-category').value = category;
+  } else {
+    catSel.value = 'Fasteners';
+  }
+
+  openModal('editProduct');
+}
+
+async function confirmEditProduct() {
+  const name     = document.getElementById('ep-name').value.trim();
+  const sku      = document.getElementById('ep-sku').value.trim();
+  const category = resolveCategory('ep-category', 'ep-custom-category');
+  const unit     = document.getElementById('ep-unit').value.trim() || 'pcs';
+  const errEl    = document.getElementById('ep-error');
+  errEl.style.display = 'none';
+
+  if (!name)     { errEl.textContent = '⚠ Product name is required.'; errEl.style.display = 'block'; return; }
+  if (!sku)      { errEl.textContent = '⚠ SKU is required.';          errEl.style.display = 'block'; return; }
+  if (!category) { errEl.textContent = '⚠ Please enter a custom category name.'; errEl.style.display = 'block'; return; }
+
+  try {
+    if (_editProductId) {
+      await apiFetch(`/products/${_editProductId}`, {
+        method: 'PUT',
+        body: JSON.stringify({ name, sku, category, unit })
+      });
+    }
+    closeModal('editProduct');
+    await loadProductsPage();
+    await populateProductDropdowns();
+    showToast(`✅ Product "${name}" updated`);
+  } catch (err) {
+    errEl.textContent = '⚠ ' + err.message;
+    errEl.style.display = 'block';
+  }
+}
+
+// ══════════════════════════════════════════════════════════
 // STOCK IN
 // ══════════════════════════════════════════════════════════
 
@@ -1679,18 +1918,25 @@ function toggleAddProduct(show) {
   document.getElementById('si-new-product-group').style.display = show ? 'block' : 'none';
   document.getElementById('si-product-select-group').style.display = show ? 'none' : 'block';
   document.getElementById('si-new-product-error').style.display = 'none';
-  if (!show) ['si-new-product-name','si-new-product-sku','si-new-product-unit'].forEach(id => { document.getElementById(id).value = ''; });
+  if (!show) {
+    ['si-new-product-name','si-new-product-sku','si-new-product-unit','si-new-product-custom-category'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
+    const cat = document.getElementById('si-new-product-category');
+    if (cat) cat.value = 'Fasteners';
+    const custom = document.getElementById('si-new-product-custom-category');
+    if (custom) custom.style.display = 'none';
+  }
 }
 
 async function saveNewProduct() {
   const name     = document.getElementById('si-new-product-name').value.trim();
   const sku      = document.getElementById('si-new-product-sku').value.trim();
-  const category = document.getElementById('si-new-product-category').value;
+  const category = resolveCategory('si-new-product-category', 'si-new-product-custom-category');
   const unit     = document.getElementById('si-new-product-unit').value.trim() || 'pcs';
   const errEl    = document.getElementById('si-new-product-error');
 
-  if (!name) { errEl.textContent = '⚠ Product name is required.'; errEl.style.display = 'block'; return; }
-  if (!sku)  { errEl.textContent = '⚠ SKU is required.';          errEl.style.display = 'block'; return; }
+  if (!name)     { errEl.textContent = '⚠ Product name is required.'; errEl.style.display = 'block'; return; }
+  if (!sku)      { errEl.textContent = '⚠ SKU is required.';          errEl.style.display = 'block'; return; }
+  if (!category) { errEl.textContent = '⚠ Please enter a custom category name.'; errEl.style.display = 'block'; return; }
   errEl.style.display = 'none';
 
   try {
@@ -1945,6 +2191,49 @@ async function confirmEditWarehouse() {
     await loadWarehousesPage();
     showToast(`✅ "${name}" updated`);
   } catch (err) { errEl.textContent = '⚠ ' + err.message; errEl.style.display = 'block'; }
+}
+
+// ══════════════════════════════════════════════════════════
+// DELETE — WAREHOUSE / PRODUCT / INVENTORY
+// ══════════════════════════════════════════════════════════
+
+async function deleteWarehouse(btn) {
+  const row  = btn.closest('tr');
+  const id   = row.dataset.id;
+  const name = row.cells[0]?.querySelector('strong')?.textContent || 'this warehouse';
+  if (!confirm(`Delete "${name}"? This cannot be undone.`)) return;
+  try {
+    await apiFetch(`/warehouses/${id}`, { method: 'DELETE' });
+    row.remove();
+    await loadWarehouseMap();
+    showToast(`🗑 "${name}" deleted`);
+  } catch (err) { showToast('⚠ ' + err.message); }
+}
+
+async function deleteProduct(btn) {
+  const row  = btn.closest('tr');
+  const id   = row.dataset.id;
+  const name = row.cells[0]?.querySelector('strong')?.textContent || 'this product';
+  if (!confirm(`Delete "${name}"? This cannot be undone.`)) return;
+  try {
+    await apiFetch(`/products/${id}`, { method: 'DELETE' });
+    row.remove();
+    await populateProductDropdowns();
+    showToast(`🗑 "${name}" deleted`);
+  } catch (err) { showToast('⚠ ' + err.message); }
+}
+
+async function deleteInventory(btn) {
+  const row     = btn.closest('tr');
+  const id      = btn.dataset.id;
+  const product = row.cells[0]?.querySelector('strong')?.textContent || 'this entry';
+  const wh      = row.cells[2]?.textContent || '';
+  if (!confirm(`Delete inventory record for "${product}" in ${wh}? This cannot be undone.`)) return;
+  try {
+    await apiFetch(`/inventory/${id}`, { method: 'DELETE' });
+    row.remove();
+    showToast(`🗑 Inventory record deleted`);
+  } catch (err) { showToast('⚠ ' + err.message); }
 }
 
 // ══════════════════════════════════════════════════════════
