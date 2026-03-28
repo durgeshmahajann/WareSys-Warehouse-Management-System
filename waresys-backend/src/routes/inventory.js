@@ -4,11 +4,12 @@ const { protect } = require('../middleware/auth');
 
 router.use(protect);
 
-// GET /api/inventory?warehouse=&rack=&status=
+// GET /api/inventory?warehouse=&rack=&status=&product=
 router.get('/', async (req, res) => {
   const filter = {};
   if (req.query.warehouse) filter.warehouse = req.query.warehouse;
   if (req.query.rack)      filter.rack = req.query.rack;
+  if (req.query.product)   filter.product = req.query.product;
 
   const items = await Inventory.find(filter)
     .populate('product',   'name sku category')
@@ -33,7 +34,6 @@ router.get('/', async (req, res) => {
     };
   });
 
-  // Filter by status client-side (after computing)
   if (req.query.status) {
     result = result.filter(i => i.status === req.query.status);
   }

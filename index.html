@@ -1133,46 +1133,60 @@ tbody tr:last-child td { border-bottom: none; }
   </div>
 </div>
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
-const USERS = {
-  'admin@waresys.com': { pass:'admin123', name:'Admin User',   role:'WAREHOUSE_ADMIN', initials:'AD' },
-  'staff@waresys.com': { pass:'staff123', name:'Staff Member', role:'WAREHOUSE_STAFF', initials:'ST' },
-  'view@waresys.com':  { pass:'view123',  name:'View Only',    role:'VIEWER',          initials:'VO' }
-};
+<script>
+// ═══════════════════════════════════════════════════════════
+// WARESYS — BACKEND-CONNECTED FRONTEND
+// All data comes from the Node.js API. No hardcoded users.
+// ═══════════════════════════════════════════════════════════
 
+const API = 'http://localhost:3000/api';
+
+// ── API helper ────────────────────────────────────────────
+async function apiFetch(endpoint, options = {}) {
+  const token = localStorage.getItem('waresys_token');
+  const res = await fetch(`${API}${endpoint}`, {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+      ...(options.headers || {})
+    }
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || 'Request failed');
+  return data;
+}
+
+// ── Role permissions (mirrors backend) ───────────────────
 const ROLE_PERMISSIONS = {
   WAREHOUSE_ADMIN: {
-    pages: ['dashboard','warehouses','products','inventory','movement','orders','reports','settings'],
+    pages:   ['dashboard','warehouses','products','inventory','movement','orders','reports','settings'],
     actions: ['addProduct','stockIn','stockOut','transfer','addWarehouse']
   },
   WAREHOUSE_STAFF: {
-    pages: ['dashboard','products','inventory','movement','orders'],
+    pages:   ['dashboard','products','inventory','movement','orders'],
     actions: ['stockIn','stockOut','transfer']
   },
   VIEWER: {
-    pages: ['dashboard','products','inventory','reports'],
+    pages:   ['dashboard','products','inventory','reports'],
     actions: []
   }
 };
 
 function applyRoleAccess(role) {
-  const perms = ROLE_PERMISSIONS[role];
+  const perms = ROLE_PERMISSIONS[role] || { pages: [], actions: [] };
 
   document.querySelectorAll('.nav-item').forEach(item => {
     const match = item.getAttribute('onclick')?.match(/'(.+?)'/);
     const page = match ? match[1] : null;
-    if (page && !perms.pages.includes(page)) {
-      item.style.display = 'none';
-    } else {
-      item.style.display = 'flex';
-    }
+    if (page) item.style.display = perms.pages.includes(page) ? 'flex' : 'none';
   });
 
   const actionMap = {
-    addProduct: ".topbar [onclick=\"openModal('addProduct')\"], .quick-actions [onclick=\"openModal('addProduct')\"], #page-products [onclick=\"openModal('addProduct')\"], #page-warehouses [onclick=\"openModal('addProduct')\"]",
-    stockIn:    ".topbar [onclick=\"openModal('stockIn')\"], .quick-actions [onclick=\"openModal('stockIn')\"], #page-movement [onclick=\"openModal('stockIn')\"]",
-    stockOut:   ".topbar [onclick=\"openModal('stockOut')\"], .quick-actions [onclick=\"openModal('stockOut')\"], #page-movement [onclick=\"openModal('stockOut')\"], .filter-row [onclick=\"openModal('stockOut')\"]",
-    transfer:   ".topbar [onclick=\"openModal('transfer')\"], .quick-actions [onclick=\"openModal('transfer')\"], #page-movement [onclick=\"openModal('transfer')\"]",
+    addProduct:   ".topbar [onclick=\"openModal('addProduct')\"], .quick-actions [onclick=\"openModal('addProduct')\"], #page-products [onclick=\"openModal('addProduct')\"]",
+    stockIn:      ".topbar [onclick=\"openModal('stockIn')\"], .quick-actions [onclick=\"openModal('stockIn')\"], #page-movement [onclick=\"openModal('stockIn')\"]",
+    stockOut:     ".topbar [onclick=\"openModal('stockOut')\"], .quick-actions [onclick=\"openModal('stockOut')\"], #page-movement [onclick=\"openModal('stockOut')\"], .filter-row [onclick=\"openModal('stockOut')\"]",
+    transfer:     ".topbar [onclick=\"openModal('transfer')\"], .quick-actions [onclick=\"openModal('transfer')\"], #page-movement [onclick=\"openModal('transfer')\"]",
     addWarehouse: "[onclick=\"openModal('addWarehouse')\"]"
   };
 
@@ -1182,12 +1196,16 @@ function applyRoleAccess(role) {
     });
   });
 
-  // Row-level stock out buttons: hide only if stockOut not permitted
   document.querySelectorAll('.row-out-btn').forEach(btn => {
     btn.style.display = perms.actions.includes('stockOut') ? '' : 'none';
   });
 }
 
+// ══════════════════════════════════════════════════════════
+// AUTH
+// ══════════════════════════════════════════════════════════
+
+// Role tab quick-fill (still useful UX even with real auth)
 const roleDefaults = {
   admin:  { email:'admin@waresys.com', pass:'admin123' },
   staff:  { email:'staff@waresys.com', pass:'staff123' },
@@ -1202,25 +1220,25 @@ function switchRole(role, el) {
   document.getElementById('login-error').classList.remove('show');
 }
 
-function doLogin() {
+async function doLogin() {
   const email = document.getElementById('login-email').value.trim();
   const pass  = document.getElementById('login-pass').value;
   const errEl = document.getElementById('login-error');
   const btn   = document.getElementById('login-btn');
 
   errEl.classList.remove('show');
-  const user = USERS[email];
-
-  if (!user || user.pass !== pass) {
-    errEl.classList.add('show');
-    document.getElementById('login-pass').value='';
-    return;
-  }
-
   btn.textContent = 'Signing in…';
   btn.classList.add('loading');
 
-  setTimeout(() => {
+  try {
+    const data = await apiFetch('/auth/login', {
+      method: 'POST',
+      body:   JSON.stringify({ email, password: pass })
+    });
+
+    localStorage.setItem('waresys_token', data.token);
+    const user = data.user;
+
     document.getElementById('user-display-name').textContent = user.name;
     document.getElementById('user-display-role').textContent = user.role;
     document.getElementById('avatar-initials').textContent   = user.initials;
@@ -1230,11 +1248,17 @@ function doLogin() {
 
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('app').classList.add('show');
-    recalcUtilization();
 
+    await loadDashboard();
+
+  } catch (err) {
+    errEl.textContent = '❌ ' + err.message;
+    errEl.classList.add('show');
+    document.getElementById('login-pass').value = '';
+  } finally {
     btn.textContent = 'Sign In →';
     btn.classList.remove('loading');
-  }, 900);
+  }
 }
 
 document.addEventListener('keydown', e => {
@@ -1242,28 +1266,42 @@ document.addEventListener('keydown', e => {
 });
 
 function doLogout() {
+  localStorage.removeItem('waresys_token');
   document.getElementById('app').classList.remove('show');
   document.getElementById('login-screen').style.display = 'flex';
-  document.querySelectorAll('.nav-item').forEach(n => n.style.display = 'flex');
-  document.querySelectorAll('.btn, .qa-btn, .btn-confirm-danger').forEach(b => b.style.display = '');
   document.getElementById('login-email').value = 'admin@waresys.com';
   document.getElementById('login-pass').value  = 'admin123';
 }
 
+// ══════════════════════════════════════════════════════════
+// PAGE NAVIGATION
+// ══════════════════════════════════════════════════════════
+
 const pageTitles = {
-  dashboard:'Warehouse <span>Dashboard</span>', warehouses:'Warehouse <span>Management</span>',
-  products:'Product <span>Catalog</span>',      inventory:'Inventory <span>Tracker</span>',
-  movement:'Stock <span>Movement</span>',        orders:'Order <span>Management</span>',
-  reports:'Reports <span>&amp; Analytics</span>',settings:'System <span>Settings</span>'
+  dashboard:  'Warehouse <span>Dashboard</span>',
+  warehouses: 'Warehouse <span>Management</span>',
+  products:   'Product <span>Catalog</span>',
+  inventory:  'Inventory <span>Tracker</span>',
+  movement:   'Stock <span>Movement</span>',
+  orders:     'Order <span>Management</span>',
+  reports:    'Reports <span>&amp; Analytics</span>',
+  settings:   'System <span>Settings</span>'
 };
 
 function showPage(id, el) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.getElementById('page-'+id).classList.add('active');
+  document.getElementById('page-' + id).classList.add('active');
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   if (el) el.classList.add('active');
   document.getElementById('page-title').innerHTML = pageTitles[id] || id;
-  if (id === 'reports') showReport(_currentReport || 'stock');
+
+  // Lazy-load page data when navigating
+  if (id === 'warehouses') loadWarehousesPage();
+  if (id === 'products')   loadProductsPage();
+  if (id === 'inventory')  loadInventoryTable();
+  if (id === 'movement')   loadMovementTable();
+  if (id === 'orders')     loadOrdersPage();
+  if (id === 'reports')    showReport(_currentReport || 'stock');
 }
 
 function navTo(id) {
@@ -1271,302 +1309,603 @@ function navTo(id) {
   showPage(id, document.querySelectorAll('.nav-item')[map[id]]);
 }
 
-function updateSoWarehouses() {
-  const productName = document.getElementById('so-product').value;
-  const whSel       = document.getElementById('so-warehouse');
-  whSel.innerHTML   = '';
+// ══════════════════════════════════════════════════════════
+// LOAD ALL DATA
+// ══════════════════════════════════════════════════════════
 
-  if (!productName) {
-    whSel.innerHTML = '<option value="">— Select Product First —</option>';
-    document.getElementById('so-available').textContent = 'Available: —';
-    return;
-  }
-
-  // Find all inventory rows for this product with qty > 0
-  const matches = [];
-  document.querySelectorAll('#page-inventory tbody tr').forEach(row => {
-    const name = row.cells[0]?.querySelector('strong')?.textContent?.trim() || '';
-    const qty  = parseInt((row.cells[5]?.textContent || '0').replace(/,/g,'')) || 0;
-    const wh   = (row.dataset.wh || row.cells[2]?.textContent || '').trim();
-    if (name === productName && qty > 0) matches.push({ wh, qty });
-  });
-
-  if (!matches.length) {
-    whSel.innerHTML = '<option value="">— Out of Stock —</option>';
-    document.getElementById('so-available').textContent = 'Available: 0 units';
-    return;
-  }
-
-  matches.forEach(m => {
-    const opt = document.createElement('option');
-    opt.value = m.wh;
-    opt.textContent = `${m.wh} — ${m.qty.toLocaleString()} units`;
-    whSel.appendChild(opt);
-  });
-
-  updateSoAvailable();
+async function loadDashboard() {
+  await Promise.all([
+    loadStats(),
+    loadInventoryTable(),
+    loadMovementTable(),
+    loadWarehouseMap(),
+    populateProductDropdowns(),
+    populateSupplierDropdown()
+  ]);
 }
 
-function getAvailableQty(productName, whCode) {
-  for (let r of document.querySelectorAll('#page-inventory tbody tr')) {
-    const name = r.cells[0]?.querySelector('strong')?.textContent?.trim() || '';
-    const wh   = (r.dataset.wh || r.cells[2]?.textContent || '').trim();
-    if (name === productName && (!whCode || wh === whCode))
-      return parseInt((r.cells[5]?.textContent || '0').replace(/,/g,'')) || 0;
-  }
-  return 0;
+// ── Dashboard stat cards ──────────────────────────────────
+async function loadStats() {
+  try {
+    const { data } = await apiFetch('/reports/dashboard');
+    document.querySelector('.stat-card.c1 .stat-val').textContent = data.totalProducts.toLocaleString();
+    document.querySelector('.stat-card.c2 .stat-val').textContent = data.totalStockUnits.toLocaleString();
+    document.querySelector('.stat-card.c3 .stat-val').textContent = data.lowStockAlerts;
+    document.querySelector('.stat-card.c4 .stat-val').textContent = data.activeOrders;
+  } catch (err) { console.error('Stats:', err); }
 }
 
-function updateSoAvailable() {
-  const productName = document.getElementById('so-product').value;
-  const whCode      = document.getElementById('so-warehouse')?.value || '';
-  const qty         = getAvailableQty(productName, whCode);
-  const label       = document.getElementById('so-available');
-  if (label) label.textContent = productName ? `Available: ${qty.toLocaleString()} units` : 'Available: —';
-}
+// ── Inventory table (used on both dashboard + inventory page)
+async function loadInventoryTable() {
+  try {
+    const { data } = await apiFetch('/inventory');
 
-function setMaxQty() {
-  const productName = document.getElementById('so-product').value;
-  const whCode      = document.getElementById('so-warehouse')?.value || '';
-  if (!productName) { showToast('⚠ Please select a product first.'); return; }
-  const qty = getAvailableQty(productName, whCode);
-  document.getElementById('so-qty').value = qty;
-}
-
-function openStockOutFor(productName, location) {
-  const sel = document.getElementById('so-product');
-  for (let opt of sel.options) {
-    if (opt.text === productName || opt.value === productName) { sel.value = opt.value; break; }
-  }
-  updateSoWarehouses();
-
-  // Try to pre-select the warehouse from the location string
-  const whMatch = location.match(/WH\d+/);
-  if (whMatch) {
-    const whSel = document.getElementById('so-warehouse');
-    for (let opt of whSel.options) {
-      if (opt.value === whMatch[0]) { whSel.value = opt.value; break; }
+    // Full inventory page
+    const tbody = document.querySelector('#page-inventory tbody');
+    if (tbody) {
+      tbody.innerHTML = '';
+      data.forEach(item => {
+        const badgeClass = { OK:'badge-ok', LOW:'badge-low', OVER:'badge-warn', OUT:'badge-out' }[item.status] || 'badge-ok';
+        const tr = document.createElement('tr');
+        tr.dataset.wh  = item.warehouse?._id || '';
+        tr.dataset.rack = item.rack || '';
+        tr.innerHTML = `
+          <td><strong>${item.product?.name || '—'}</strong></td>
+          <td class="sku">${item.product?.sku || '—'}</td>
+          <td>${item.warehouse?.name || '—'}</td>
+          <td>${item.rack || '—'}</td>
+          <td>${item.bin || '—'}</td>
+          <td>${item.quantity.toLocaleString()}</td>
+          <td><span class="badge ${badgeClass}">${item.status}</span></td>
+          <td>
+            <button class="row-out-btn"
+              onclick="openStockOutFor('${(item.product?.name||'').replace(/'/g,"\\'")}','${item.warehouse?.name || ''}','${item.product?._id}','${item.warehouse?._id}')">
+              📤 Stock Out
+            </button>
+          </td>`;
+        tbody.appendChild(tr);
+      });
     }
+
+    // Dashboard overview (first 5)
+    const dashTbody = document.querySelector('#page-dashboard .card tbody');
+    if (dashTbody) {
+      dashTbody.innerHTML = '';
+      data.slice(0, 5).forEach(item => {
+        const pct = item.quantity > 0 ? Math.min(100, Math.round((item.quantity / 1500) * 100)) : 0;
+        const barColor = { OUT:'var(--accent3)', LOW:'var(--accent3)', OVER:'var(--accent5)', OK:'var(--accent4)' }[item.status];
+        const badgeClass = { OK:'badge-ok', LOW:'badge-low', OVER:'badge-warn', OUT:'badge-out' }[item.status];
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><div style="font-weight:700;color:var(--text)">${item.product?.name}</div><div class="sku">${item.product?.sku}</div></td>
+          <td class="sku">${item.warehouse?.name || '—'}</td>
+          <td>
+            <div class="qty-bar-wrap">
+              <span style="font-family:var(--mono);color:var(--text)">${item.quantity}</span>
+              <div class="qty-bar"><div class="qty-bar-fill" style="width:${pct}%;background:${barColor}"></div></div>
+            </div>
+          </td>
+          <td><span class="badge ${badgeClass}">${item.status}</span></td>`;
+        dashTbody.appendChild(tr);
+      });
+    }
+
+    applyInventoryFilters();
+  } catch (err) { console.error('Inventory:', err); }
+}
+
+// ── Movement table ────────────────────────────────────────
+async function loadMovementTable() {
+  try {
+    const { data } = await apiFetch('/movements?limit=20');
+
+    // Full movement page
+    const tbody = document.querySelector('#page-movement tbody');
+    if (tbody) {
+      tbody.innerHTML = '';
+      data.forEach(m => {
+        const date     = new Date(m.createdAt).toISOString().slice(0, 10);
+        const badgeMap = { IN:'badge-in', OUT:'badge-out', TRANSFER:'badge-xfer' };
+        const sign     = { IN:'+', OUT:'-', TRANSFER:'~' }[m.type] || '';
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="sku">${date}</td>
+          <td><strong>${m.product?.name || '—'}</strong></td>
+          <td><span class="badge ${badgeMap[m.type]}">${m.type === 'TRANSFER' ? 'XFER' : m.type}</span></td>
+          <td>${sign}${m.quantity}</td>
+          <td class="sku">${m.fromWarehouse?.name || '—'}</td>
+          <td class="sku">${m.toWarehouse?.name || '—'}</td>
+          <td class="sku">${m.reference || '—'}</td>`;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // Dashboard recent movements panel
+    const panels = document.querySelectorAll('#page-dashboard .card');
+    let movPanel = null;
+    panels.forEach(p => {
+      if (p.querySelector('.card-title')?.textContent?.includes('Stock Movements')) {
+        movPanel = p.querySelector('.card-title').closest('.card').querySelector('div:last-child');
+      }
+    });
+    if (movPanel) {
+      movPanel.innerHTML = '';
+      data.slice(0, 5).forEach(m => {
+        const iconMap  = { IN:'📥', OUT:'📤', TRANSFER:'🔁' };
+        const colorMap = { IN:'var(--accent2)', OUT:'var(--accent3)', TRANSFER:'var(--accent5)' };
+        const classMap = { IN:'in', OUT:'out', TRANSFER:'xfer' };
+        const sign     = { IN:'+', OUT:'-', TRANSFER:'~' }[m.type] || '';
+        movPanel.innerHTML += `
+          <div class="move-item">
+            <div class="move-icon ${classMap[m.type]}">${iconMap[m.type]}</div>
+            <div>
+              <div class="move-product">${m.product?.name || '—'}</div>
+              <div class="move-detail">${m.type} · ${m.toWarehouse?.name || m.fromWarehouse?.name || '—'} · ${m.reference || ''}</div>
+            </div>
+            <div class="move-qty" style="color:${colorMap[m.type]}">${sign}${m.quantity}</div>
+          </div>`;
+      });
+    }
+  } catch (err) { console.error('Movements:', err); }
+}
+
+// ── Warehouse map + table ─────────────────────────────────
+async function loadWarehouseMap() {
+  try {
+    const { data } = await apiFetch('/warehouses');
+
+    // Dashboard warehouse map
+    const whMap = document.querySelector('.warehouse-map');
+    if (whMap) {
+      whMap.innerHTML = '';
+      data.forEach(wh => {
+        const barColor = wh.utilization >= 85 ? 'var(--accent3)' : wh.utilization >= 60 ? 'var(--accent)' : 'var(--accent4)';
+        const node = document.createElement('div');
+        node.className = 'wh-node';
+        node.innerHTML = `
+          <div class="wh-node-name">${wh.name}</div>
+          <div class="wh-node-loc">${wh.location}</div>
+          <div class="wh-node-stat" style="color:${barColor}">${wh.utilization}%</div>
+          <div class="wh-node-sub">${wh.occupied.toLocaleString()} / ${wh.bins.toLocaleString()} units</div>
+          <div class="wh-util"><div class="wh-util-bar"><div class="wh-util-fill" style="width:${wh.utilization}%;background:${barColor}"></div></div></div>`;
+        whMap.appendChild(node);
+      });
+    }
+
+    populateWarehouseDropdowns(data);
+    populateWarehouseFilters(data);
+  } catch (err) { console.error('Warehouse map:', err); }
+}
+
+async function loadWarehousesPage() {
+  try {
+    const { data } = await apiFetch('/warehouses');
+    const tbody = document.querySelector('#wh-table tbody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    data.forEach(wh => {
+      const barColor  = wh.utilization >= 85 ? 'var(--accent3)' : wh.utilization >= 60 ? 'var(--accent)' : 'var(--accent4)';
+      const badgeHtml = wh.utilization >= 85
+        ? '<span class="badge badge-warn">NEAR FULL</span>'
+        : '<span class="badge badge-ok">ACTIVE</span>';
+      const tr = document.createElement('tr');
+      tr.dataset.id   = wh.id;
+      tr.dataset.bins = wh.bins;
+      tr.dataset.util = wh.utilization;
+      tr.innerHTML = `
+        <td><strong>${wh.name}</strong></td>
+        <td class="sku">${wh.location}</td>
+        <td>${wh.sections}</td>
+        <td>${wh.racks}</td>
+        <td>${wh.bins.toLocaleString()}</td>
+        <td>
+          <div class="qty-bar-wrap">
+            <div class="qty-bar" style="max-width:80px">
+              <div class="qty-bar-fill" style="width:${wh.utilization}%;background:${barColor}"></div>
+            </div>
+            <span class="sku">${wh.utilization}%</span>
+          </div>
+        </td>
+        <td>${badgeHtml}</td>
+        <td><button class="row-edit-btn" onclick="openEditWarehouse(this)">✏ Edit</button></td>`;
+      tbody.appendChild(tr);
+    });
+  } catch (err) { console.error('Warehouses page:', err); }
+}
+
+async function loadProductsPage() {
+  try {
+    const { data } = await apiFetch('/products');
+    const tbody = document.querySelector('#page-products tbody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    data.forEach(p => {
+      const badgeClass = { OK:'badge-ok', LOW:'badge-low', OVER:'badge-warn', OUT:'badge-out' }[p.status] || 'badge-ok';
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><strong>${p.name}</strong></td>
+        <td class="sku">${p.sku}</td>
+        <td>${p.category}</td>
+        <td class="sku">—</td>
+        <td>${p.totalQty.toLocaleString()}</td>
+        <td><span class="badge ${badgeClass}">${p.status}</span></td>`;
+      tbody.appendChild(tr);
+    });
+  } catch (err) { console.error('Products page:', err); }
+}
+
+async function loadOrdersPage() {
+  try {
+    const { data } = await apiFetch('/orders');
+    const tbody = document.querySelector('#page-orders tbody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    data.forEach(o => {
+      const date = new Date(o.createdAt).toISOString().slice(0, 10);
+      const typeMap   = { INBOUND:'badge-in', OUTBOUND:'badge-out', TRANSFER:'badge-xfer' };
+      const statusMap = { PENDING:'badge-warn', DISPATCHED:'badge-ok', RECEIVED:'badge-ok', CANCELLED:'badge-low' };
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td class="sku">${o.orderId}</td>
+        <td><span class="badge ${typeMap[o.type]}">${o.type}</span></td>
+        <td>${o.product?.name || '—'}</td>
+        <td>${o.quantity}</td>
+        <td class="sku">${date}</td>
+        <td><span class="badge ${statusMap[o.status]}">${o.status}</span></td>`;
+      tbody.appendChild(tr);
+    });
+  } catch (err) { console.error('Orders:', err); }
+}
+
+// ══════════════════════════════════════════════════════════
+// DROPDOWN POPULATION
+// ══════════════════════════════════════════════════════════
+
+function populateWarehouseDropdowns(warehouses) {
+  // Store for later (stock-out lookup)
+  window._warehouses = warehouses;
+
+  ['si-warehouse', 'tr-from', 'tr-to'].forEach(id => {
+    const sel = document.getElementById(id);
+    if (!sel) return;
+    sel.innerHTML = '';
+    warehouses.forEach(wh => {
+      const opt = document.createElement('option');
+      opt.value = wh.id;
+      opt.textContent = wh.name;
+      sel.appendChild(opt);
+    });
+  });
+
+  // Stock-out warehouse dropdown
+  const soWh = document.getElementById('so-warehouse');
+  if (soWh) {
+    soWh.innerHTML = '<option value="">— Select Warehouse —</option>';
+    warehouses.forEach(wh => {
+      const opt = document.createElement('option');
+      opt.value = wh.id;
+      opt.textContent = wh.name;
+      soWh.appendChild(opt);
+    });
+  }
+}
+
+function populateWarehouseFilters(warehouses) {
+  const sel = document.getElementById('inv-filter-wh');
+  if (!sel) return;
+  sel.innerHTML = '<option value="">All Warehouses</option>';
+  warehouses.forEach(wh => {
+    const opt = document.createElement('option');
+    opt.value = wh.id;
+    opt.textContent = wh.name;
+    sel.appendChild(opt);
+  });
+}
+
+async function populateProductDropdowns() {
+  try {
+    const { data } = await apiFetch('/products');
+    window._products = data;
+
+    ['si-product', 'so-product', 'tr-product'].forEach(id => {
+      const sel = document.getElementById(id);
+      if (!sel) return;
+      sel.innerHTML = '<option value="">— Select Product —</option>';
+      data.forEach(p => {
+        const opt = document.createElement('option');
+        opt.value = p.id;
+        opt.textContent = p.name;
+        sel.appendChild(opt);
+      });
+    });
+  } catch (err) { console.error('Product dropdowns:', err); }
+}
+
+async function populateSupplierDropdown() {
+  try {
+    const { data } = await apiFetch('/suppliers');
+    window._suppliers = data;
+    const sel = document.getElementById('si-supplier-select');
+    if (!sel) return;
+    sel.innerHTML = '<option value="">— Select Supplier —</option>';
+    data.forEach(s => {
+      const opt = document.createElement('option');
+      opt.value = s._id;
+      opt.textContent = s.name;
+      sel.appendChild(opt);
+    });
+  } catch (err) { console.error('Supplier dropdown:', err); }
+}
+
+// ══════════════════════════════════════════════════════════
+// STOCK IN
+// ══════════════════════════════════════════════════════════
+
+function toggleAddSupplier(show) {
+  document.getElementById('si-new-supplier-group').style.display = show ? 'block' : 'none';
+  document.getElementById('si-supplier-select-group').style.display = show ? 'none' : 'block';
+  if (!show) ['si-new-name','si-new-contact','si-new-phone','si-new-email','si-new-city'].forEach(id => { document.getElementById(id).value = ''; });
+}
+
+async function saveNewSupplier() {
+  const name    = document.getElementById('si-new-name').value.trim();
+  const contact = document.getElementById('si-new-contact').value.trim();
+  const phone   = document.getElementById('si-new-phone').value.trim();
+  const email   = document.getElementById('si-new-email').value.trim();
+  const city    = document.getElementById('si-new-city').value.trim();
+
+  if (!name) {
+    document.getElementById('si-new-name').style.borderColor = 'var(--accent3)';
+    return;
+  }
+  document.getElementById('si-new-name').style.borderColor = '';
+
+  try {
+    const { data } = await apiFetch('/suppliers', {
+      method: 'POST',
+      body: JSON.stringify({ name, contact, phone, email, city })
+    });
+    const sel = document.getElementById('si-supplier-select');
+    const opt = document.createElement('option');
+    opt.value = data._id; opt.textContent = data.name;
+    sel.appendChild(opt);
+    sel.value = data._id;
+    toggleAddSupplier(false);
+    showToast(`✅ Supplier "${name}" added & selected`);
+  } catch (err) { showToast('⚠ ' + err.message); }
+}
+
+function toggleAddProduct(show) {
+  document.getElementById('si-new-product-group').style.display = show ? 'block' : 'none';
+  document.getElementById('si-product-select-group').style.display = show ? 'none' : 'block';
+  document.getElementById('si-new-product-error').style.display = 'none';
+  if (!show) ['si-new-product-name','si-new-product-sku','si-new-product-unit'].forEach(id => { document.getElementById(id).value = ''; });
+}
+
+async function saveNewProduct() {
+  const name     = document.getElementById('si-new-product-name').value.trim();
+  const sku      = document.getElementById('si-new-product-sku').value.trim();
+  const category = document.getElementById('si-new-product-category').value;
+  const unit     = document.getElementById('si-new-product-unit').value.trim() || 'pcs';
+  const errEl    = document.getElementById('si-new-product-error');
+
+  if (!name) { errEl.textContent = '⚠ Product name is required.'; errEl.style.display = 'block'; return; }
+  if (!sku)  { errEl.textContent = '⚠ SKU is required.';          errEl.style.display = 'block'; return; }
+  errEl.style.display = 'none';
+
+  try {
+    const { data } = await apiFetch('/products', {
+      method: 'POST',
+      body: JSON.stringify({ name, sku, category, unit })
+    });
+
+    // Add to all product selects
+    ['si-product','so-product','tr-product'].forEach(id => {
+      const sel = document.getElementById(id);
+      if (!sel) return;
+      const opt = document.createElement('option');
+      opt.value = data._id; opt.textContent = data.name;
+      sel.appendChild(opt);
+    });
+    document.getElementById('si-product').value = data._id;
+    toggleAddProduct(false);
+    showToast(`✅ Product "${name}" added & selected`);
+  } catch (err) { errEl.textContent = '⚠ ' + err.message; errEl.style.display = 'block'; }
+}
+
+async function confirmStockIn() {
+  const supplierId  = document.getElementById('si-supplier-select').value;
+  const productId   = document.getElementById('si-product').value;
+  const warehouseId = document.getElementById('si-warehouse').value;
+  const qty         = parseInt(document.getElementById('si-qty').value);
+  const rack        = document.getElementById('si-rack').value.trim();
+  const bin         = document.getElementById('si-bin').value.trim();
+  const errEl       = document.getElementById('si-error');
+  errEl.style.display = 'none';
+
+  if (!supplierId) { errEl.textContent = '⚠ Please select a supplier.'; errEl.style.display = 'block'; return; }
+  if (!productId)  { errEl.textContent = '⚠ Please select a product.';  errEl.style.display = 'block'; return; }
+  if (!qty || qty <= 0) { errEl.textContent = '⚠ Please enter a valid quantity.'; errEl.style.display = 'block'; return; }
+
+  try {
+    await apiFetch('/movements/stock-in', {
+      method: 'POST',
+      body: JSON.stringify({ productId, warehouseId, supplierId, quantity: qty, rack, bin })
+    });
+    closeModal('stockIn');
+    await loadDashboard();
+    showToast(`✅ Stocked in ${qty.toLocaleString()} units`);
+  } catch (err) { errEl.textContent = '⚠ ' + err.message; errEl.style.display = 'block'; }
+}
+
+// ══════════════════════════════════════════════════════════
+// STOCK OUT
+// ══════════════════════════════════════════════════════════
+
+function updateSoWarehouses() {
+  // No-op for dropdown UX — warehouse is now a direct select
+}
+function updateSoAvailable() {
+  function updateSoAvailable() {
+  const productId   = document.getElementById('so-product').value;
+  const warehouseId = document.getElementById('so-warehouse').value;
+  if (!productId || !warehouseId) return;
+
+  apiFetch(`/inventory?product=${productId}&warehouse=${warehouseId}`)
+    .then(({ data }) => {
+      if (data && data.length > 0) {
+        document.getElementById('so-available').textContent = `Available: ${data[0].quantity.toLocaleString()}`;
+      } else {
+        document.getElementById('so-available').textContent = 'Available: 0';
+      }
+    })
+    .catch(() => {});
+}
+  // Could be enhanced to call /inventory?product=&warehouse= for live qty
+}
+function setMaxQty() {
+  const productId   = document.getElementById('so-product').value   || window._soProductId;
+  const warehouseId = document.getElementById('so-warehouse').value || window._soWarehouseId;
+
+  if (!productId || !warehouseId) {
+    showToast('⚠ Please select a product and warehouse first.');
+    return;
   }
 
-  document.getElementById('so-location').value   = location;
-  document.getElementById('so-qty').value         = '';
-  document.getElementById('so-customer').value    = '';
-  document.getElementById('so-ref').value         = '';
-  document.getElementById('so-notes').value       = '';
+  // Find available qty from inventory data
+  apiFetch(`/inventory?product=${productId}&warehouse=${warehouseId}`)
+    .then(({ data }) => {
+      if (data && data.length > 0) {
+        const available = data[0].quantity;
+        document.getElementById('so-qty').value = available;
+        document.getElementById('so-available').textContent = `Available: ${available.toLocaleString()}`;
+        showToast(`✅ Max quantity set to ${available.toLocaleString()}`);
+      } else {
+        showToast('⚠ No stock found for this product in selected warehouse.');
+      }
+    })
+    .catch(() => showToast('⚠ Could not fetch available stock.'));
+}
+
+function openStockOutFor(productName, warehouseName, productId, warehouseId) {
+  // Pre-select product
+  const soProduct = document.getElementById('so-product');
+  if (soProduct && productId) soProduct.value = productId;
+
+  // Pre-select warehouse
+  const soWh = document.getElementById('so-warehouse');
+  if (soWh && warehouseId) soWh.value = warehouseId;
+
+  document.getElementById('so-location').value  = warehouseName || '';
+  document.getElementById('so-qty').value        = '';
+  document.getElementById('so-customer').value   = '';
+  document.getElementById('so-ref').value        = '';
+  document.getElementById('so-notes').value      = '';
   document.getElementById('stockout-error').style.display = 'none';
-  updateSoAvailable();
+
+  window._soProductId   = productId;
+  window._soWarehouseId = warehouseId;
   openModal('stockOut');
 }
 
-function confirmStockOut() {
-  const productName = document.getElementById('so-product').value;
-  const whCode      = document.getElementById('so-warehouse')?.value || '';
-  const qtyOut      = parseInt(document.getElementById('so-qty').value);
+async function confirmStockOut() {
+  const productId   = document.getElementById('so-product').value   || window._soProductId;
+  const warehouseId = document.getElementById('so-warehouse').value || window._soWarehouseId;
+  const qty         = parseInt(document.getElementById('so-qty').value);
+  const customer    = document.getElementById('so-customer').value.trim();
+  const ref         = document.getElementById('so-ref').value.trim();
+  const notes       = document.getElementById('so-notes').value.trim();
   const errEl       = document.getElementById('stockout-error');
   errEl.style.display = 'none';
 
-  if (!productName) {
-    errEl.textContent = '⚠ Please select a product.';
-    errEl.style.display = 'block'; return;
-  }
-  if (!whCode) {
-    errEl.textContent = '⚠ Please select a warehouse.';
-    errEl.style.display = 'block'; return;
-  }
-  if (!qtyOut || qtyOut <= 0) {
-    errEl.textContent = '⚠ Please enter a valid quantity to dispatch.';
-    errEl.style.display = 'block'; return;
-  }
+  if (!productId)   { errEl.textContent = '⚠ Please select a product.';   errEl.style.display = 'block'; return; }
+  if (!warehouseId) { errEl.textContent = '⚠ Please select a warehouse.'; errEl.style.display = 'block'; return; }
+  if (!qty || qty <= 0) { errEl.textContent = '⚠ Please enter a valid quantity.'; errEl.style.display = 'block'; return; }
 
-  // Find the matching row — product AND warehouse must match
-  const invRows = document.querySelectorAll('#page-inventory tbody tr');
-  let matched = false;
-
-  for (let row of invRows) {
-    const nameCell = row.querySelector('td:first-child strong');
-    if (!nameCell || nameCell.textContent.trim() !== productName) continue;
-    const rowWh = (row.dataset.wh || row.cells[2]?.textContent || '').trim();
-    if (rowWh !== whCode) continue;
-
-    const qtyCell    = row.cells[5];
-    const currentQty = parseInt(qtyCell.textContent.replace(/,/g, ''));
-
-    if (qtyOut > currentQty) {
-      errEl.textContent = `⚠ Cannot dispatch ${qtyOut} units — only ${currentQty.toLocaleString()} in stock at ${whCode}.`;
-      errEl.style.display = 'block'; return;
-    }
-
-    const newQty = currentQty - qtyOut;
-    qtyCell.textContent = newQty.toLocaleString();
-
-    const statusCell = row.cells[6];
-    let newBadge = '';
-    if (newQty === 0) {
-      newBadge = '<span class="badge badge-out">OUT</span>';
-      row.style.opacity = '0.5';
-      const btn = row.querySelector('.row-out-btn');
-      if (btn) { btn.disabled = true; btn.textContent = '✓ Out of Stock'; btn.style.pointerEvents = 'none'; }
-    } else if (newQty <= 20)  newBadge = '<span class="badge badge-low">LOW</span>';
-    else if (newQty >= 500)   newBadge = '<span class="badge badge-warn">OVER</span>';
-    else                      newBadge = '<span class="badge badge-ok">OK</span>';
-    statusCell.innerHTML = newBadge;
-
-    matched = true;
-    break;
-  }
-
-  if (!matched) {
-    errEl.textContent = '⚠ Product not found in inventory.';
-    errEl.style.display = 'block';
-    return;
-  }
-
-  // Log to movement table
-  const movTbody = document.querySelector('#page-movement tbody');
-  if (movTbody) {
-    const today = new Date().toISOString().slice(0, 10);
-    const tr = document.createElement('tr');
-    const ref = document.getElementById('so-ref').value.trim() || `OUT-${String(Date.now()).slice(-4)}`;
-    tr.innerHTML = `
-      <td class="sku">${today}</td>
-      <td><strong>${productName}</strong></td>
-      <td><span class="badge badge-out">OUT</span></td>
-      <td>-${qtyOut.toLocaleString()}</td>
-      <td class="sku">${whCode}</td>
-      <td>—</td>
-      <td class="sku">${ref}</td>
-    `;
-    movTbody.insertBefore(tr, movTbody.firstChild);
-  }
-
-  // Reset warehouse dropdown
-  const whSel = document.getElementById('so-warehouse');
-  if (whSel) whSel.innerHTML = '<option value="">— Select Product First —</option>';
-  document.getElementById('so-available').textContent = 'Available: —';
-
-  closeModal('stockOut');
-  recalcUtilization();
-  showToast(`✅ Dispatched ${qtyOut.toLocaleString()} × ${productName} from ${whCode}`);
-}
-
-function showToast(msg) {
-  let toast = document.getElementById('app-toast');
-  if (!toast) {
-    toast = document.createElement('div');
-    toast.id = 'app-toast';
-    toast.style.cssText = `
-      position:fixed; bottom:28px; left:50%; transform:translateX(-50%) translateY(20px);
-      background:#0f172a; color:#fff; padding:11px 22px; border-radius:10px;
-      font-size:13px; font-weight:600; font-family:var(--syne);
-      box-shadow:0 8px 24px rgba(15,23,42,0.25); z-index:999;
-      opacity:0; transition:all 0.25s ease; white-space:nowrap;
-    `;
-    document.body.appendChild(toast);
-  }
-  toast.textContent = msg;
-  toast.style.opacity = '1';
-  toast.style.transform = 'translateX(-50%) translateY(0)';
-  clearTimeout(toast._timer);
-  toast._timer = setTimeout(() => {
-    toast.style.opacity = '0';
-    toast.style.transform = 'translateX(-50%) translateY(20px)';
-  }, 3000);
-}
-
-// ── WAREHOUSE CODE HELPER ────────────────────────────────
-// Single source of truth: WH code = "WH" + (1-based row index in warehouse table)
-// Stored as data-wh on every warehouse table row on creation/lookup.
-function getWhCode(warehouseName) {
-  let code = '';
-  document.querySelectorAll('#wh-table tbody tr').forEach((row, idx) => {
-    const nameEl = row.cells[0]?.querySelector('strong');
-    if (!nameEl) return;
-    const rowCode = 'WH' + (idx + 1);
-    row.dataset.wh = rowCode; // stamp it every time so it's always current
-    if (nameEl.textContent.trim() === warehouseName) code = rowCode;
-  });
-  return code || warehouseName.replace('Warehouse ', 'WH').replace(/\s/g, '');
-}
-
-// ── UTILIZATION ENGINE ───────────────────────────────────
-// Utilization % = total inventory units in warehouse / total bin capacity
-// If a warehouse has 1000 bins and 1000 units stocked → 100%
-
-function recalcUtilization() {
-  const whData = {};
-
-  // Seed totals from warehouse table — use row index as stable whCode
-  document.querySelectorAll('#wh-table tbody tr').forEach((row, idx) => {
-    const nameEl = row.cells[0]?.querySelector('strong');
-    if (!nameEl) return;
-    const whName    = nameEl.textContent.trim();
-    const whCode    = 'WH' + (idx + 1);
-    row.dataset.wh  = whCode; // keep stamped
-    const totalBins = parseInt((row.dataset.bins || row.cells[4]?.textContent || '0').replace(/,/g,'')) || 1;
-    whData[whCode]  = { name: whName, totalBins, occupied: 0, row };
-  });
-
-  // Sum total inventory quantity per warehouse (units = bins used)
-  document.querySelectorAll('#page-inventory tbody tr').forEach(invRow => {
-    const whCode = (invRow.dataset.wh || invRow.cells[2]?.textContent || '').trim();
-    const qty    = parseInt((invRow.cells[5]?.textContent || '0').replace(/,/g,'')) || 0;
-    if (whData[whCode] && qty > 0) whData[whCode].occupied += qty;
-  });
-
-  // Apply to warehouse table rows + dashboard nodes
-  Object.entries(whData).forEach(([whCode, d]) => {
-    const util     = Math.min(100, Math.round((d.occupied / d.totalBins) * 100));
-    const barColor = util >= 85 ? 'var(--accent3)' : util >= 60 ? 'var(--accent)' : 'var(--accent4)';
-    const badgeHtml = util >= 85
-      ? '<span class="badge badge-warn">NEAR FULL</span>'
-      : '<span class="badge badge-ok">ACTIVE</span>';
-
-    if (d.row) {
-      d.row.dataset.util = util;
-      d.row.cells[5].innerHTML = `
-        <div class="qty-bar-wrap">
-          <div class="qty-bar" style="max-width:80px">
-            <div class="qty-bar-fill" style="width:${util}%;background:${barColor}"></div>
-          </div>
-          <span class="sku">${util}%</span>
-        </div>`;
-      d.row.cells[6].innerHTML = badgeHtml;
-    }
-
-    document.querySelectorAll('.wh-node').forEach(node => {
-      if (node.querySelector('.wh-node-name')?.textContent?.trim() !== d.name) return;
-      const stat = node.querySelector('.wh-node-stat');
-      const sub  = node.querySelector('.wh-node-sub');
-      const fill = node.querySelector('.wh-util-fill');
-      if (stat) { stat.textContent = util + '%'; stat.style.color = barColor; }
-      if (sub)  sub.textContent = `${d.occupied.toLocaleString()} / ${d.totalBins.toLocaleString()} units`;
-      if (fill) { fill.style.width = util + '%'; fill.style.background = barColor; }
+  try {
+    await apiFetch('/movements/stock-out', {
+      method: 'POST',
+      body: JSON.stringify({ productId, warehouseId, quantity: qty, customer, reference: ref, notes })
     });
-  });
+    window._soProductId = null; window._soWarehouseId = null;
+    closeModal('stockOut');
+    await loadDashboard();
+    showToast(`✅ Dispatched ${qty.toLocaleString()} units`);
+  } catch (err) { errEl.textContent = '⚠ ' + err.message; errEl.style.display = 'block'; }
 }
 
-// ── WAREHOUSE EDIT ──────────────────────────────────────
-let _editWhRow = null; // reference to the row being edited
+// ══════════════════════════════════════════════════════════
+// TRANSFER
+// ══════════════════════════════════════════════════════════
+
+async function confirmTransfer() {
+  const productId       = document.getElementById('tr-product').value;
+  const fromWarehouseId = document.getElementById('tr-from').value;
+  const toWarehouseId   = document.getElementById('tr-to').value;
+  const qty             = parseInt(document.getElementById('tr-qty').value);
+  const fromBin         = document.getElementById('tr-from-bin').value.trim();
+  const toBin           = document.getElementById('tr-to-bin').value.trim();
+  const errEl           = document.getElementById('tr-error');
+  errEl.style.display   = 'none';
+
+  if (!productId)                       { errEl.textContent = '⚠ Please select a product.'; errEl.style.display = 'block'; return; }
+  if (!qty || qty <= 0)                 { errEl.textContent = '⚠ Please enter a valid quantity.'; errEl.style.display = 'block'; return; }
+  if (fromWarehouseId === toWarehouseId){ errEl.textContent = '⚠ From and To warehouses must be different.'; errEl.style.display = 'block'; return; }
+
+  try {
+    await apiFetch('/movements/transfer', {
+      method: 'POST',
+      body: JSON.stringify({ productId, fromWarehouseId, toWarehouseId, quantity: qty, fromBin, toBin })
+    });
+    closeModal('transfer');
+    await loadDashboard();
+    showToast(`✅ Transfer complete`);
+  } catch (err) { errEl.textContent = '⚠ ' + err.message; errEl.style.display = 'block'; }
+}
+
+// ══════════════════════════════════════════════════════════
+// WAREHOUSES — ADD / EDIT
+// ══════════════════════════════════════════════════════════
+
+async function confirmAddWarehouse() {
+  const name     = document.getElementById('wh-name').value.trim();
+  const location = document.getElementById('wh-location').value.trim();
+  const sections = parseInt(document.getElementById('wh-sections').value) || 0;
+  const racks    = parseInt(document.getElementById('wh-racks').value) || 0;
+  const bins     = parseInt(document.getElementById('wh-bins').value) || 0;
+  const errEl    = document.getElementById('wh-error');
+  errEl.style.display = 'none';
+
+  if (!name)     { errEl.textContent = '⚠ Warehouse name is required.'; errEl.style.display = 'block'; return; }
+  if (!location) { errEl.textContent = '⚠ Location is required.';       errEl.style.display = 'block'; return; }
+  if (sections <= 0 || racks <= 0 || bins <= 0) { errEl.textContent = '⚠ Sections, racks and bins must each be at least 1.'; errEl.style.display = 'block'; return; }
+
+  try {
+    await apiFetch('/warehouses', {
+      method: 'POST',
+      body: JSON.stringify({ name, location, sections, racks, bins })
+    });
+    ['wh-name','wh-location','wh-sections','wh-racks','wh-bins'].forEach(id => { document.getElementById(id).value = ''; });
+    closeModal('addWarehouse');
+    await loadWarehouseMap();
+    await loadWarehousesPage();
+    showToast(`✅ "${name}" created`);
+  } catch (err) { errEl.textContent = '⚠ ' + err.message; errEl.style.display = 'block'; }
+}
+
+let _editWhId = null;
 
 function openEditWarehouse(btn) {
   const row = btn.closest('tr');
-  _editWhRow = row;
+  _editWhId  = row.dataset.id;
 
-  const name     = row.cells[0].querySelector('strong').textContent;
-  const location = row.cells[1].textContent;
-  const sections = parseInt(row.dataset.sections) || parseInt(row.cells[2].textContent) || 1;
-  const racks    = parseInt(row.dataset.racks)    || parseInt(row.cells[3].textContent.replace(/,/g,'')) || 1;
-  const bins     = parseInt(row.dataset.bins)     || parseInt(row.cells[4].textContent.replace(/,/g,'')) || 1;
-
-  document.getElementById('edit-wh-name').value     = name;
-  document.getElementById('edit-wh-location').value = location;
-  document.getElementById('edit-wh-sections').value = sections;
-  document.getElementById('edit-wh-racks').value    = racks;
-  document.getElementById('edit-wh-bins').value     = bins;
-  document.getElementById('edit-wh-sub').textContent = name.toUpperCase() + ' · MODIFY_CAPACITY';
+  document.getElementById('edit-wh-name').value     = row.cells[0].querySelector('strong').textContent;
+  document.getElementById('edit-wh-location').value = row.cells[1].textContent;
+  document.getElementById('edit-wh-sections').value = row.cells[2].textContent;
+  document.getElementById('edit-wh-racks').value    = row.cells[3].textContent.replace(/,/g,'');
+  document.getElementById('edit-wh-bins').value     = row.cells[4].textContent.replace(/,/g,'');
+  document.getElementById('edit-wh-sub').textContent = row.cells[0].querySelector('strong').textContent.toUpperCase() + ' · MODIFY_CAPACITY';
   document.getElementById('edit-wh-error').style.display = 'none';
-
   updateEditPreview();
   openModal('editWarehouse');
 }
@@ -1583,15 +1922,7 @@ function updateEditPreview() {
   document.getElementById('edit-wh-preview').textContent = bins.toLocaleString();
 }
 
-// Live preview on manual input too
-['edit-wh-sections','edit-wh-racks','edit-wh-bins'].forEach(id => {
-  document.addEventListener('DOMContentLoaded', () => {
-    const el = document.getElementById(id);
-    if (el) el.addEventListener('input', updateEditPreview);
-  });
-});
-
-function confirmEditWarehouse() {
+async function confirmEditWarehouse() {
   const name     = document.getElementById('edit-wh-name').value.trim();
   const location = document.getElementById('edit-wh-location').value.trim();
   const sections = parseInt(document.getElementById('edit-wh-sections').value);
@@ -1600,494 +1931,31 @@ function confirmEditWarehouse() {
   const errEl    = document.getElementById('edit-wh-error');
   errEl.style.display = 'none';
 
-  if (!name)     { errEl.textContent = '⚠ Warehouse name is required.'; errEl.style.display = 'block'; return; }
-  if (!location) { errEl.textContent = '⚠ Location is required.';       errEl.style.display = 'block'; return; }
-  if (sections < 1 || racks < 1 || bins < 1) {
-    errEl.textContent = '⚠ Sections, racks and bins must each be at least 1.';
-    errEl.style.display = 'block'; return;
-  }
+  if (!name)     { errEl.textContent = '⚠ Name is required.';     errEl.style.display = 'block'; return; }
+  if (!location) { errEl.textContent = '⚠ Location is required.'; errEl.style.display = 'block'; return; }
+  if (sections < 1 || racks < 1 || bins < 1) { errEl.textContent = '⚠ Sections, racks and bins must each be at least 1.'; errEl.style.display = 'block'; return; }
 
-  const row = _editWhRow;
-
-  // Duplicate name check — skip the row currently being edited
-  const duplicateEdit = Array.from(document.querySelectorAll("#wh-table tbody tr")).some(r => {
-    if (r === row) return false;
-    const nameEl = r.cells[0]?.querySelector("strong");
-    return nameEl && nameEl.textContent.trim().toLowerCase() === name.toLowerCase();
-  });
-  if (duplicateEdit) {
-    errEl.textContent = `🚫 A warehouse named "${name}" already exists. Please use a different name.`;
-    errEl.style.display = "block";
-    document.getElementById("edit-wh-name").focus();
-    return;
-  }
-  const util = parseInt(row.dataset.util) || 0;
-
-  // Update row cells
-  row.cells[0].innerHTML  = `<strong>${name}</strong>`;
-  row.cells[1].textContent = location;
-  row.cells[1].className   = 'sku';
-  row.cells[2].textContent = sections;
-  row.cells[3].textContent = racks.toLocaleString();
-  row.cells[4].textContent = bins.toLocaleString();
-
-  // Update utilization bar colour
-  const barColor = util >= 90 ? 'var(--accent3)' : util >= 70 ? 'var(--accent)' : 'var(--accent4)';
-  row.cells[5].innerHTML = `
-    <div class="qty-bar-wrap">
-      <div class="qty-bar" style="max-width:80px">
-        <div class="qty-bar-fill" style="width:${util}%;background:${barColor}"></div>
-      </div>
-      <span class="sku">${util}%</span>
-    </div>`;
-
-  // Update status badge
-  const badge = util >= 90
-    ? '<span class="badge badge-warn">NEAR FULL</span>'
-    : '<span class="badge badge-ok">ACTIVE</span>';
-  row.cells[6].innerHTML = badge;
-
-  // Store updated data attrs
-  row.dataset.sections = sections;
-  row.dataset.racks    = racks;
-  row.dataset.bins     = bins;
-
-  // Update dashboard warehouse map node (match by name)
-  document.querySelectorAll('.wh-node').forEach(node => {
-    if (node.querySelector('.wh-node-name')?.textContent === name ||
-        node.querySelector('.wh-node-name')?.textContent === row.cells[0].querySelector('strong')?.textContent) {
-      node.querySelector('.wh-node-name').textContent = name;
-      node.querySelector('.wh-node-loc').textContent  = location;
-      const sub = node.querySelector('.wh-node-sub');
-      if (sub) sub.textContent = `— / ${bins.toLocaleString()} bins`;
-    }
-  });
-
-  closeModal('editWarehouse');
-  recalcUtilization();
-  showToast(`✅ "${name}" updated — ${bins.toLocaleString()} bins, ${racks} racks`);
-}
-
-// ── WAREHOUSE ADD ────────────────────────────────────────
-function confirmAddWarehouse() {
-  const name     = document.getElementById('wh-name').value.trim();
-  const location = document.getElementById('wh-location').value.trim();
-  const sections = parseInt(document.getElementById('wh-sections').value) || 0;
-  const racks    = parseInt(document.getElementById('wh-racks').value) || 0;
-  const bins     = parseInt(document.getElementById('wh-bins').value) || 0;
-  const errEl    = document.getElementById('wh-error');
-  errEl.style.display = 'none';
-
-  if (!name) {
-    errEl.textContent = '⚠ Warehouse name is required.'; errEl.style.display = 'block';
-    document.getElementById('wh-name').focus(); return;
-  }
-  if (!location) {
-    errEl.textContent = '⚠ Location / city is required.'; errEl.style.display = 'block';
-    document.getElementById('wh-location').focus(); return;
-  }
-  if (sections <= 0 || racks <= 0 || bins <= 0) {
-    errEl.textContent = '⚠ Sections, racks, and bins must each be at least 1.'; errEl.style.display = 'block'; return;
-  }
-
-  // Duplicate name check
-  const duplicate = Array.from(document.querySelectorAll('#wh-table tbody tr')).some(row => {
-    const nameEl = row.cells[0]?.querySelector('strong');
-    return nameEl && nameEl.textContent.trim().toLowerCase() === name.toLowerCase();
-  });
-  if (duplicate) {
-    errEl.textContent = `🚫 A warehouse named "${name}" already exists. Please use a different name.`;
-    errEl.style.display = 'block';
-    document.getElementById('wh-name').focus();
-    return;
-  }
-
-  const totalBins  = sections * racks * bins;
-  const totalRacks = sections * racks;
-  const whNum      = document.querySelectorAll('#page-warehouses tbody tr').length + 1;
-  const whCode     = 'WH' + whNum;
-
-  // Add row to Warehouses table
-  const whTbody = document.querySelector('#page-warehouses tbody');
-  const tr = document.createElement('tr');
-  tr.dataset.sections = sections;
-  tr.dataset.racks    = totalRacks;
-  tr.dataset.bins     = totalBins;
-  tr.dataset.util     = 0;
-  tr.dataset.wh       = whCode;
-  tr.innerHTML = `
-    <td><strong>${name}</strong></td>
-    <td class="sku">${location}</td>
-    <td>${sections}</td>
-    <td>${totalRacks}</td>
-    <td>${totalBins.toLocaleString()}</td>
-    <td>
-      <div class="qty-bar-wrap">
-        <div class="qty-bar" style="max-width:80px"><div class="qty-bar-fill" style="width:0%;background:var(--accent4)"></div></div>
-        <span class="sku">0%</span>
-      </div>
-    </td>
-    <td><span class="badge badge-ok">ACTIVE</span></td>
-    <td><button class="row-edit-btn" onclick="openEditWarehouse(this)">✏ Edit</button></td>
-  `;
-  whTbody.appendChild(tr);
-
-  // Add to warehouse map on dashboard
-  const whMap = document.querySelector('.warehouse-map');
-  if (whMap) {
-    const node = document.createElement('div');
-    node.className = 'wh-node';
-    node.innerHTML = `
-      <div class="wh-node-name">${name}</div>
-      <div class="wh-node-loc">${location}</div>
-      <div class="wh-node-stat" style="color:var(--accent4)">0%</div>
-      <div class="wh-node-sub">0 / ${totalBins.toLocaleString()} units</div>
-      <div class="wh-util"><div class="wh-util-bar"><div class="wh-util-fill" style="width:0%;background:var(--accent4)"></div></div></div>
-    `;
-    whMap.appendChild(node);
-  }
-
-  // Add to all Warehouse dropdowns in modals
-  document.querySelectorAll('select.form-input').forEach(sel => {
-    const hasWh = Array.from(sel.options).some(o => o.text.startsWith('Warehouse ') || o.text === 'Warehouse 1');
-    if (hasWh) {
-      const opt = document.createElement('option');
-      opt.value = name; opt.textContent = name;
-      sel.appendChild(opt);
-    }
-  });
-
-  // Also add to Stock In warehouse select specifically
-  const siWh = document.getElementById('si-warehouse');
-  if (siWh && !Array.from(siWh.options).some(o => o.value === name)) {
-    const opt = document.createElement('option');
-    opt.value = name; opt.textContent = name;
-    siWh.appendChild(opt);
-  }
-
-  // Also add to Transfer modal from/to warehouse selects
-  ['tr-from','tr-to'].forEach(id => {
-    const sel = document.getElementById(id);
-    if (sel && !Array.from(sel.options).some(o => o.value === name)) {
-      const opt = document.createElement('option');
-      opt.value = name; opt.textContent = name;
-      sel.appendChild(opt);
-    }
-  });
-
-  // Also update inventory warehouse filter dropdown
-  const invWhFilter = document.getElementById('inv-filter-wh');
-  if (invWhFilter) {
-    if (!Array.from(invWhFilter.options).some(o => o.value === whCode)) {
-      const opt = document.createElement('option');
-      opt.value = whCode;
-      opt.textContent = name;
-      invWhFilter.appendChild(opt);
-    }
-  }
-
-  // Clear fields
-  ['wh-name','wh-location','wh-sections','wh-racks','wh-bins'].forEach(id => {
-    document.getElementById(id).value = '';
-  });
-
-  closeModal('addWarehouse');
-  showToast(`✅ "${name}" (${whCode}) created — ${totalBins.toLocaleString()} bins`);
-}
-
-function toggleAddProduct(show) {
-  document.getElementById('si-new-product-group').style.display = show ? 'block' : 'none';
-  document.getElementById('si-product-select-group').style.display = show ? 'none' : 'block';
-  document.getElementById('si-new-product-error').style.display = 'none';
-  if (!show) {
-    ['si-new-product-name','si-new-product-sku','si-new-product-unit'].forEach(id => {
-      document.getElementById(id).value = '';
+  try {
+    await apiFetch(`/warehouses/${_editWhId}`, {
+      method: 'PUT',
+      body: JSON.stringify({ name, location, sections, racks, bins })
     });
-  }
+    closeModal('editWarehouse');
+    await loadWarehouseMap();
+    await loadWarehousesPage();
+    showToast(`✅ "${name}" updated`);
+  } catch (err) { errEl.textContent = '⚠ ' + err.message; errEl.style.display = 'block'; }
 }
 
-function saveNewProduct() {
-  const name     = document.getElementById('si-new-product-name').value.trim();
-  const sku      = document.getElementById('si-new-product-sku').value.trim();
-  const category = document.getElementById('si-new-product-category').value;
-  const errEl    = document.getElementById('si-new-product-error');
+// ══════════════════════════════════════════════════════════
+// REPORTS
+// ══════════════════════════════════════════════════════════
 
-  if (!name) {
-    errEl.textContent = '⚠ Product name is required.';
-    errEl.style.display = 'block';
-    document.getElementById('si-new-product-name').focus();
-    return;
-  }
-  if (!sku) {
-    errEl.textContent = '⚠ SKU is required.';
-    errEl.style.display = 'block';
-    document.getElementById('si-new-product-sku').focus();
-    return;
-  }
-  errEl.style.display = 'none';
-
-  // Add to the product select dropdown in this modal
-  const sel = document.getElementById('si-product');
-  const opt = document.createElement('option');
-  opt.value = name;
-  opt.textContent = name;
-  sel.appendChild(opt);
-  sel.value = name;
-
-  // Also add to the Stock Out modal select
-  const soSel = document.getElementById('so-product');
-  if (soSel) {
-    const soOpt = document.createElement('option');
-    soOpt.value = name; soOpt.textContent = name;
-    soSel.appendChild(soOpt);
-  }
-
-  // Also add to the Transfer modal product select
-  const trSel = document.getElementById('tr-product');
-  if (trSel && !Array.from(trSel.options).some(o => o.value === name)) {
-    const trOpt = document.createElement('option');
-    trOpt.value = name; trOpt.textContent = name;
-    trSel.appendChild(trOpt);
-  }
-
-  // Add a new row to the Inventory table
-  const invTbody = document.querySelector('#page-inventory tbody');
-  if (invTbody) {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td><strong>${name}</strong></td>
-      <td class="sku">${sku}</td>
-      <td>—</td>
-      <td>—</td>
-      <td>—</td>
-      <td>0</td>
-      <td><span class="badge badge-out">OUT</span></td>
-      <td><button class="row-out-btn" onclick="openStockOutFor('${name}','—')" disabled style="pointer-events:none;">✓ Out of Stock</button></td>
-    `;
-    tr.style.opacity = '0.55';
-    invTbody.appendChild(tr);
-  }
-
-  // Add to Products page table too
-  const prodTbody = document.querySelector('#page-products tbody');
-  if (prodTbody) {
-    const tr2 = document.createElement('tr');
-    tr2.innerHTML = `
-      <td><strong>${name}</strong></td>
-      <td class="sku">${sku}</td>
-      <td>${category}</td>
-      <td class="sku">—</td>
-      <td>0</td>
-      <td><span class="badge badge-out">OUT</span></td>
-    `;
-    prodTbody.appendChild(tr2);
-  }
-
-  toggleAddProduct(false);
-  showToast(`✅ Product "${name}" (${sku}) added & selected`);
-}
-
-function toggleAddSupplier(show) {
-  document.getElementById('si-new-supplier-group').style.display = show ? 'block' : 'none';
-  document.getElementById('si-supplier-select-group').style.display = show ? 'none' : 'block';
-  if (!show) {
-    // clear fields
-    ['si-new-name','si-new-contact','si-new-phone','si-new-email','si-new-city'].forEach(id => {
-      document.getElementById(id).value = '';
-    });
-  }
-}
-
-function saveNewSupplier() {
-  const name = document.getElementById('si-new-name').value.trim();
-  if (!name) {
-    document.getElementById('si-new-name').focus();
-    document.getElementById('si-new-name').style.borderColor = 'var(--accent3)';
-    return;
-  }
-  document.getElementById('si-new-name').style.borderColor = '';
-
-  // Add to the select dropdown
-  const sel = document.getElementById('si-supplier-select');
-  const opt = document.createElement('option');
-  opt.value = name;
-  opt.textContent = name;
-  sel.appendChild(opt);
-  sel.value = name;
-
-  // Switch back to select view
-  toggleAddSupplier(false);
-  showToast(`✅ Supplier "${name}" added & selected`);
-}
-
-function confirmStockIn() {
-  const supplier = document.getElementById('si-supplier-select').value;
-  const qty      = parseInt(document.getElementById('si-qty').value);
-  const errEl    = document.getElementById('si-error');
-  errEl.style.display = 'none';
-
-  if (!supplier) {
-    errEl.textContent = '⚠ Please select a supplier.';
-    errEl.style.display = 'block'; return;
-  }
-  if (!qty || qty <= 0) {
-    errEl.textContent = '⚠ Please enter a valid quantity.';
-    errEl.style.display = 'block'; return;
-  }
-
-  const productName = document.getElementById('si-product').value;
-  if (!productName) {
-    errEl.textContent = '⚠ Please select a product.';
-    errEl.style.display = 'block'; return;
-  }
-
-  const warehouse = document.getElementById('si-warehouse').value;
-  const bin       = document.getElementById('si-bin').value.trim() || '—';
-  const rack      = document.getElementById('si-rack').value.trim() || '—';
-  const sku       = document.getElementById('si-sku').value.trim() || '—';
-
-  // ── RESOLVE WAREHOUSE CODE ────────────────────────────────
-  const whCode   = getWhCode(warehouse);
-  let   totalBins = 0;
-  document.querySelectorAll('#wh-table tbody tr').forEach(row => {
-    if (row.dataset.wh === whCode)
-      totalBins = parseInt((row.dataset.bins || row.cells[4]?.textContent || '0').replace(/,/g,'')) || 0;
-  });
-
-  // ── CAPACITY CHECK ─────────────────────────────────────────
-  let currentUnits = 0;
-  document.querySelectorAll('#page-inventory tbody tr').forEach(invRow => {
-    const invWh = (invRow.dataset.wh || invRow.cells[2]?.textContent || '').trim();
-    const invQty = parseInt((invRow.cells[5]?.textContent || '0').replace(/,/g,'')) || 0;
-    if (invWh === whCode) currentUnits += invQty;
-  });
-
-  const availableSpace = totalBins - currentUnits;
-  if (totalBins > 0 && qty > availableSpace) {
-    errEl.textContent = availableSpace <= 0
-      ? `🚫 "${warehouse}" is full — 0 units of space remaining (capacity: ${totalBins.toLocaleString()} units).`
-      : `🚫 Not enough space in "${warehouse}" — only ${availableSpace.toLocaleString()} units of space remaining (capacity: ${totalBins.toLocaleString()}, used: ${currentUnits.toLocaleString()}).`;
-    errEl.style.display = 'block';
-    return;
-  }
-  // ───────────────────────────────────────────────────────────
-
-  // ── UPDATE INVENTORY TABLE ───────────────────────────────
-  const whCode2   = whCode;
-  const invTbody  = document.querySelector('#page-inventory tbody');
-  const invRows   = invTbody ? invTbody.querySelectorAll('tr') : [];
-  let   matched   = false;
-
-  for (let row of invRows) {
-    const nameCell = row.querySelector('td:first-child strong');
-    if (!nameCell || nameCell.textContent.trim() !== productName) continue;
-
-    // Must also match the same warehouse — same product in a different WH gets a new row
-    const rowWh = (row.dataset.wh || row.cells[2]?.textContent || '').trim();
-    if (rowWh && rowWh !== '—' && rowWh !== whCode2) continue;
-
-    matched = true;
-    const qtyCell = row.cells[5];
-    const newQty  = (parseInt(qtyCell.textContent.replace(/,/g,'')) || 0) + qty;
-    qtyCell.textContent = newQty.toLocaleString();
-
-    // Stamp SKU if blank (cells[1])
-    if (!row.cells[1].textContent.trim() || row.cells[1].textContent.trim() === '—') {
-      row.cells[1].textContent = sku; row.cells[1].className = 'sku';
-    }
-    // Stamp warehouse if blank (cells[2])
-    if (!row.cells[2].textContent.trim() || row.cells[2].textContent.trim() === '—') {
-      row.cells[2].textContent = whCode2; row.dataset.wh = whCode2;
-    }
-    // Stamp rack if blank (cells[3])
-    if (!row.cells[3].textContent.trim() || row.cells[3].textContent.trim() === '—') {
-      row.cells[3].textContent = rack;
-    }
-    // Stamp bin if blank (cells[4])
-    if (!row.cells[4].textContent.trim() || row.cells[4].textContent.trim() === '—') {
-      row.cells[4].textContent = bin;
-    }
-
-    // Re-enable Stock Out button
-    const rowBtn = row.querySelector('.row-out-btn');
-    if (rowBtn) {
-      rowBtn.disabled = false;
-      rowBtn.textContent = '📤 Stock Out';
-      rowBtn.style.pointerEvents = '';
-      rowBtn.onclick = () => openStockOutFor(productName, `${whCode2} / ${rack} / ${bin}`);
-    }
-    row.style.opacity = '';
-
-    // Update status badge
-    const statusCell = row.cells[6];
-    if (newQty <= 0)        statusCell.innerHTML = '<span class="badge badge-out">OUT</span>';
-    else if (newQty <= 20)  statusCell.innerHTML = '<span class="badge badge-low">LOW</span>';
-    else if (newQty >= 500) statusCell.innerHTML = '<span class="badge badge-warn">OVER</span>';
-    else                    statusCell.innerHTML = '<span class="badge badge-ok">OK</span>';
-    break;
-  }
-
-  // If product not found in inventory at all — insert a new row
-  if (!matched && invTbody) {
-    const badgeHtml = qty <= 0
-      ? '<span class="badge badge-out">OUT</span>'
-      : qty <= 20
-        ? '<span class="badge badge-low">LOW</span>'
-        : qty >= 500
-          ? '<span class="badge badge-warn">OVER</span>'
-          : '<span class="badge badge-ok">OK</span>';
-
-    const tr = document.createElement('tr');
-    tr.dataset.wh = whCode2;
-    tr.innerHTML = `
-      <td><strong>${productName}</strong></td>
-      <td class="sku">${sku}</td>
-      <td>${whCode2}</td>
-      <td>${rack}</td>
-      <td>${bin}</td>
-      <td>${qty.toLocaleString()}</td>
-      <td>${badgeHtml}</td>
-      <td><button class="row-out-btn" onclick="openStockOutFor('${productName}','${whCode2} / ${rack} / ${bin}')">📤 Stock Out</button></td>
-    `;
-    invTbody.appendChild(tr);
-  }
-
-  // ── LOG TO STOCK MOVEMENT TABLE ──────────────────────────
-  const movTbody = document.querySelector('#page-movement tbody');
-  if (movTbody) {
-    const today = new Date().toISOString().slice(0, 10);
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td class="sku">${today}</td>
-      <td><strong>${productName}</strong></td>
-      <td><span class="badge badge-in">IN</span></td>
-      <td>+${qty.toLocaleString()}</td>
-      <td>—</td>
-      <td class="sku">${whCode2}${bin !== '—' ? ' / ' + bin : ''}</td>
-      <td class="sku">${supplier}</td>
-    `;
-    movTbody.insertBefore(tr, movTbody.firstChild);
-  }
-
-  // Reset fields
-  document.getElementById('si-qty').value  = '';
-  document.getElementById('si-bin').value  = '';
-  document.getElementById('si-rack').value = '';
-  document.getElementById('si-sku').value  = '';
-
-  closeModal('stockIn');
-  recalcUtilization();
-  showToast(`✅ Stocked in ${qty.toLocaleString()} × ${productName} → ${whCode2}`);
-}
-
-// ── REPORTS ENGINE ───────────────────────────────────────
 let _currentReport = 'stock';
 let _currentReportData = [];
 
-function showReport(type) {
+async function showReport(type) {
   _currentReport = type;
-
-  // Highlight active button
   ['stock','movement','warehouse'].forEach(t => {
     const btn = document.getElementById('rpt-btn-' + t);
     if (btn) { btn.style.background = t === type ? 'var(--accent)' : ''; btn.style.color = t === type ? '#fff' : ''; btn.style.border = t === type ? 'none' : ''; }
@@ -2095,44 +1963,44 @@ function showReport(type) {
 
   const out = document.getElementById('report-output');
   if (!out) return;
+  out.innerHTML = '<div style="padding:32px;text-align:center;color:var(--muted);font-family:var(--mono)">Loading report…</div>';
 
-  if (type === 'stock')     out.innerHTML = buildStockReport();
-  if (type === 'movement')  out.innerHTML = buildMovementReport();
-  if (type === 'warehouse') out.innerHTML = buildWarehouseReport();
+  try {
+    const res = await apiFetch(`/reports/${type}`);
+    if (type === 'stock')     out.innerHTML = renderStockReport(res.data, res.summary);
+    if (type === 'movement')  out.innerHTML = renderMovementReport(res.data, res.summary);
+    if (type === 'warehouse') out.innerHTML = renderWarehouseReport(res.data, res.summary);
+  } catch (err) {
+    out.innerHTML = `<div style="padding:24px;color:var(--accent3)">⚠ ${err.message}</div>`;
+  }
 }
 
-function buildStockReport() {
-  const rows = document.querySelectorAll('#page-inventory tbody tr');
-  let totalUnits = 0, lowCount = 0, outCount = 0, overCount = 0;
-  let bodyRows = '';
+function renderStockReport(data, summary) {
   _currentReportData = [['Product','SKU','Warehouse','Bin','Quantity','Status']];
-
-  rows.forEach(r => {
-    const name   = r.cells[0]?.querySelector('strong')?.textContent || '—';
-    const sku    = r.cells[1]?.textContent || '—';
-    const wh     = r.cells[2]?.textContent || '—';
-    const bin    = r.cells[4]?.textContent || '—';
-    const qty    = parseInt((r.cells[5]?.textContent || '0').replace(/,/g,'')) || 0;
-    const badge  = r.cells[6]?.innerHTML || '';
-    totalUnits += qty;
-    if (badge.includes('LOW'))  lowCount++;
-    if (badge.includes('OUT'))  outCount++;
-    if (badge.includes('OVER')) overCount++;
-    bodyRows += `<tr><td><strong>${name}</strong></td><td class="sku">${sku}</td><td>${wh}</td><td>${bin}</td><td>${qty.toLocaleString()}</td><td>${badge}</td></tr>`;
-    _currentReportData.push([name, sku, wh, bin, qty, r.cells[6]?.textContent?.trim() || '']);
+  let bodyRows = '';
+  data.forEach(i => {
+    const badgeClass = { OK:'badge-ok', LOW:'badge-low', OVER:'badge-warn', OUT:'badge-out' }[i.status];
+    bodyRows += `<tr>
+      <td><strong>${i.product?.name||'—'}</strong></td>
+      <td class="sku">${i.product?.sku||'—'}</td>
+      <td>${i.warehouse?.name||'—'}</td>
+      <td>${i.bin||'—'}</td>
+      <td>${i.quantity.toLocaleString()}</td>
+      <td><span class="badge ${badgeClass}">${i.status}</span></td>
+    </tr>`;
+    _currentReportData.push([i.product?.name, i.product?.sku, i.warehouse?.name, i.bin, i.quantity, i.status]);
   });
-
-  if (!bodyRows) bodyRows = '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:24px">No inventory data found.</td></tr>';
+  if (!bodyRows) bodyRows = '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:24px">No inventory data.</td></tr>';
 
   return `
     <div class="stats-grid" style="margin-bottom:16px">
-      <div class="stat-card c2"><div class="stat-icon">📦</div><div class="stat-val" style="color:var(--accent2)">${rows.length}</div><div class="stat-label">Total SKUs</div></div>
-      <div class="stat-card c4"><div class="stat-icon">🔢</div><div class="stat-val" style="color:var(--accent4)">${totalUnits.toLocaleString()}</div><div class="stat-label">Total Units</div></div>
-      <div class="stat-card c3"><div class="stat-icon">⚠</div><div class="stat-val" style="color:var(--accent3)">${lowCount}</div><div class="stat-label">Low Stock Items</div></div>
-      <div class="stat-card c1"><div class="stat-icon">🚫</div><div class="stat-val" style="color:var(--accent3)">${outCount}</div><div class="stat-label">Out of Stock</div></div>
+      <div class="stat-card c2"><div class="stat-icon">📦</div><div class="stat-val" style="color:var(--accent2)">${summary.totalSKUs}</div><div class="stat-label">Total SKUs</div></div>
+      <div class="stat-card c4"><div class="stat-icon">🔢</div><div class="stat-val" style="color:var(--accent4)">${summary.totalUnits.toLocaleString()}</div><div class="stat-label">Total Units</div></div>
+      <div class="stat-card c3"><div class="stat-icon">⚠</div><div class="stat-val" style="color:var(--accent3)">${summary.lowCount}</div><div class="stat-label">Low Stock</div></div>
+      <div class="stat-card c1"><div class="stat-icon">🚫</div><div class="stat-val" style="color:var(--accent3)">${summary.outCount}</div><div class="stat-label">Out of Stock</div></div>
     </div>
     <div class="card">
-      <div class="card-header"><div class="card-title">📦 Stock Report — All Inventory</div><div class="card-action">Generated ${new Date().toLocaleDateString('en-IN')}</div></div>
+      <div class="card-header"><div class="card-title">📦 Stock Report</div><div class="card-action">Generated ${new Date().toLocaleDateString('en-IN')}</div></div>
       <div class="table-wrap"><table>
         <thead><tr><th>Product</th><th>SKU</th><th>Warehouse</th><th>Bin</th><th>Quantity</th><th>Status</th></tr></thead>
         <tbody>${bodyRows}</tbody>
@@ -2140,38 +2008,35 @@ function buildStockReport() {
     </div>`;
 }
 
-function buildMovementReport() {
-  const rows = document.querySelectorAll('#page-movement tbody tr');
-  let inCount = 0, outCount = 0, xferCount = 0, inUnits = 0, outUnits = 0, xferUnits = 0;
-  let bodyRows = '';
+function renderMovementReport(data, summary) {
   _currentReportData = [['Date','Product','Type','Qty','From','To','Reference']];
-
-  rows.forEach(r => {
-    const date   = r.cells[0]?.textContent || '—';
-    const prod   = r.cells[1]?.querySelector('strong')?.textContent || r.cells[1]?.textContent || '—';
-    const typeEl = r.cells[2]?.innerHTML || '';
-    const qty    = parseInt((r.cells[3]?.textContent || '0').replace(/[^0-9]/g,'')) || 0;
-    const from   = r.cells[4]?.textContent || '—';
-    const to     = r.cells[5]?.textContent || '—';
-    const ref    = r.cells[6]?.textContent || '—';
-    if (typeEl.includes('badge-in'))   { inCount++;   inUnits   += qty; }
-    if (typeEl.includes('badge-out'))  { outCount++;  outUnits  += qty; }
-    if (typeEl.includes('badge-xfer')) { xferCount++; xferUnits += qty; }
-    bodyRows += `<tr><td class="sku">${date}</td><td><strong>${prod}</strong></td><td>${typeEl}</td><td>${r.cells[3]?.textContent || '—'}</td><td class="sku">${from}</td><td class="sku">${to}</td><td class="sku">${ref}</td></tr>`;
-    _currentReportData.push([date, prod, r.cells[2]?.textContent?.trim(), qty, from, to, ref]);
+  let bodyRows = '';
+  data.forEach(m => {
+    const date     = new Date(m.createdAt).toISOString().slice(0,10);
+    const badgeMap = { IN:'badge-in', OUT:'badge-out', TRANSFER:'badge-xfer' };
+    const sign     = { IN:'+', OUT:'-', TRANSFER:'~' }[m.type] || '';
+    bodyRows += `<tr>
+      <td class="sku">${date}</td>
+      <td><strong>${m.product?.name||'—'}</strong></td>
+      <td><span class="badge ${badgeMap[m.type]}">${m.type === 'TRANSFER' ? 'XFER' : m.type}</span></td>
+      <td>${sign}${m.quantity}</td>
+      <td class="sku">${m.fromWarehouse?.name||'—'}</td>
+      <td class="sku">${m.toWarehouse?.name||'—'}</td>
+      <td class="sku">${m.reference||'—'}</td>
+    </tr>`;
+    _currentReportData.push([date, m.product?.name, m.type, m.quantity, m.fromWarehouse?.name, m.toWarehouse?.name, m.reference]);
   });
-
-  if (!bodyRows) bodyRows = '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:24px">No movement data found.</td></tr>';
+  if (!bodyRows) bodyRows = '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:24px">No movement data.</td></tr>';
 
   return `
     <div class="stats-grid" style="margin-bottom:16px">
-      <div class="stat-card c4"><div class="stat-icon">📥</div><div class="stat-val" style="color:var(--accent4)">${inCount}</div><div class="stat-label">Stock-In Events · ${inUnits.toLocaleString()} units</div></div>
-      <div class="stat-card c3"><div class="stat-icon">📤</div><div class="stat-val" style="color:var(--accent3)">${outCount}</div><div class="stat-label">Stock-Out Events · ${outUnits.toLocaleString()} units</div></div>
-      <div class="stat-card c1"><div class="stat-icon">🔁</div><div class="stat-val" style="color:var(--accent)">${xferCount}</div><div class="stat-label">Transfers · ${xferUnits.toLocaleString()} units</div></div>
-      <div class="stat-card c2"><div class="stat-icon">📋</div><div class="stat-val" style="color:var(--accent2)">${rows.length}</div><div class="stat-label">Total Movements</div></div>
+      <div class="stat-card c4"><div class="stat-icon">📥</div><div class="stat-val" style="color:var(--accent4)">${summary.inCount}</div><div class="stat-label">Stock-In · ${summary.inUnits.toLocaleString()} units</div></div>
+      <div class="stat-card c3"><div class="stat-icon">📤</div><div class="stat-val" style="color:var(--accent3)">${summary.outCount}</div><div class="stat-label">Stock-Out · ${summary.outUnits.toLocaleString()} units</div></div>
+      <div class="stat-card c1"><div class="stat-icon">🔁</div><div class="stat-val" style="color:var(--accent)">${summary.xferCount}</div><div class="stat-label">Transfers · ${summary.xferUnits.toLocaleString()} units</div></div>
+      <div class="stat-card c2"><div class="stat-icon">📋</div><div class="stat-val" style="color:var(--accent2)">${summary.total}</div><div class="stat-label">Total Movements</div></div>
     </div>
     <div class="card">
-      <div class="card-header"><div class="card-title">↕ Movement Report — All Transactions</div><div class="card-action">Generated ${new Date().toLocaleDateString('en-IN')}</div></div>
+      <div class="card-header"><div class="card-title">↕ Movement Report</div><div class="card-action">Generated ${new Date().toLocaleDateString('en-IN')}</div></div>
       <div class="table-wrap"><table>
         <thead><tr><th>Date</th><th>Product</th><th>Type</th><th>Qty</th><th>From</th><th>To</th><th>Reference</th></tr></thead>
         <tbody>${bodyRows}</tbody>
@@ -2179,67 +2044,39 @@ function buildMovementReport() {
     </div>`;
 }
 
-function buildWarehouseReport() {
-  const whRows  = document.querySelectorAll('#wh-table tbody tr');
-  const invRows = document.querySelectorAll('#page-inventory tbody tr');
-
-  // Build per-warehouse stats from live inventory
-  const stats = {};
-  whRows.forEach(r => {
-    const name     = r.cells[0]?.querySelector('strong')?.textContent || '—';
-    const location = r.cells[1]?.textContent || '—';
-    const whCode   = getWhCode(name);
-    const capacity = parseInt((r.dataset.bins || r.cells[4]?.textContent || '0').replace(/,/g,'')) || 0;
-    stats[whCode]  = { name, location, capacity, units: 0, skus: 0 };
-  });
-
-  invRows.forEach(r => {
-    const wh  = (r.dataset.wh || r.cells[2]?.textContent || '').trim();
-    const qty = parseInt((r.cells[5]?.textContent || '0').replace(/,/g,'')) || 0;
-    if (stats[wh] && qty > 0) { stats[wh].units += qty; stats[wh].skus++; }
-  });
-
+function renderWarehouseReport(data, summary) {
+  _currentReportData = [['Warehouse','Location','Capacity','Units','SKUs','Utilization']];
   let bodyRows = '';
-  let summaryCards = '';
-  _currentReportData = [['Warehouse','Location','Capacity (bins)','Units Stored','SKUs','Utilization %']];
-
-  Object.entries(stats).forEach(([code, d]) => {
-    const util     = d.capacity > 0 ? Math.min(100, Math.round((d.units / d.capacity) * 100)) : 0;
-    const barColor = util >= 85 ? 'var(--accent3)' : util >= 60 ? 'var(--accent)' : 'var(--accent4)';
-    const badge    = util >= 85 ? '<span class="badge badge-warn">NEAR FULL</span>' : '<span class="badge badge-ok">ACTIVE</span>';
-    bodyRows += `
-      <tr>
-        <td><strong>${d.name}</strong><div class="sku">${code}</div></td>
-        <td>${d.location}</td>
-        <td>${d.capacity.toLocaleString()}</td>
-        <td>${d.units.toLocaleString()}</td>
-        <td>${d.skus}</td>
-        <td>
-          <div class="qty-bar-wrap">
-            <div class="qty-bar" style="max-width:90px"><div class="qty-bar-fill" style="width:${util}%;background:${barColor}"></div></div>
-            <span class="sku">${util}%</span>
-          </div>
-        </td>
-        <td>${badge}</td>
-      </tr>`;
-    _currentReportData.push([d.name, d.location, d.capacity, d.units, d.skus, util + '%']);
+  data.forEach(wh => {
+    const barColor  = wh.utilization >= 85 ? 'var(--accent3)' : wh.utilization >= 60 ? 'var(--accent)' : 'var(--accent4)';
+    const badgeHtml = wh.utilization >= 85 ? '<span class="badge badge-warn">NEAR FULL</span>' : '<span class="badge badge-ok">ACTIVE</span>';
+    bodyRows += `<tr>
+      <td><strong>${wh.name}</strong></td>
+      <td>${wh.location}</td>
+      <td>${wh.capacity.toLocaleString()}</td>
+      <td>${wh.occupied.toLocaleString()}</td>
+      <td>${wh.skus}</td>
+      <td>
+        <div class="qty-bar-wrap">
+          <div class="qty-bar" style="max-width:90px"><div class="qty-bar-fill" style="width:${wh.utilization}%;background:${barColor}"></div></div>
+          <span class="sku">${wh.utilization}%</span>
+        </div>
+      </td>
+      <td>${badgeHtml}</td>
+    </tr>`;
+    _currentReportData.push([wh.name, wh.location, wh.capacity, wh.occupied, wh.skus, wh.utilization + '%']);
   });
-
-  if (!bodyRows) bodyRows = '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:24px">No warehouse data found.</td></tr>';
-
-  const totalCap   = Object.values(stats).reduce((s,d) => s + d.capacity, 0);
-  const totalUnits = Object.values(stats).reduce((s,d) => s + d.units, 0);
-  const avgUtil    = totalCap > 0 ? Math.round((totalUnits / totalCap) * 100) : 0;
+  if (!bodyRows) bodyRows = '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:24px">No warehouse data.</td></tr>';
 
   return `
     <div class="stats-grid" style="margin-bottom:16px">
-      <div class="stat-card c1"><div class="stat-icon">🏗</div><div class="stat-val" style="color:var(--accent)">${whRows.length}</div><div class="stat-label">Total Warehouses</div></div>
-      <div class="stat-card c2"><div class="stat-icon">🗃</div><div class="stat-val" style="color:var(--accent2)">${totalCap.toLocaleString()}</div><div class="stat-label">Total Bin Capacity</div></div>
-      <div class="stat-card c4"><div class="stat-icon">📦</div><div class="stat-val" style="color:var(--accent4)">${totalUnits.toLocaleString()}</div><div class="stat-label">Total Units Stored</div></div>
-      <div class="stat-card c3"><div class="stat-icon">📊</div><div class="stat-val" style="color:${avgUtil>=85?'var(--accent3)':'var(--accent4)'}">${avgUtil}%</div><div class="stat-label">Avg Utilization</div></div>
+      <div class="stat-card c1"><div class="stat-icon">🏗</div><div class="stat-val" style="color:var(--accent)">${summary.totalWarehouses}</div><div class="stat-label">Warehouses</div></div>
+      <div class="stat-card c2"><div class="stat-icon">🗃</div><div class="stat-val" style="color:var(--accent2)">${summary.totalCap.toLocaleString()}</div><div class="stat-label">Total Capacity</div></div>
+      <div class="stat-card c4"><div class="stat-icon">📦</div><div class="stat-val" style="color:var(--accent4)">${summary.totalUnits.toLocaleString()}</div><div class="stat-label">Units Stored</div></div>
+      <div class="stat-card c3"><div class="stat-icon">📊</div><div class="stat-val" style="color:${summary.avgUtil>=85?'var(--accent3)':'var(--accent4)'}">${summary.avgUtil}%</div><div class="stat-label">Avg Utilization</div></div>
     </div>
     <div class="card">
-      <div class="card-header"><div class="card-title">🏗 Warehouse Report — Capacity & Utilization</div><div class="card-action">Generated ${new Date().toLocaleDateString('en-IN')}</div></div>
+      <div class="card-header"><div class="card-title">🏗 Warehouse Report</div><div class="card-action">Generated ${new Date().toLocaleDateString('en-IN')}</div></div>
       <div class="table-wrap"><table>
         <thead><tr><th>Warehouse</th><th>Location</th><th>Capacity</th><th>Units Stored</th><th>SKUs</th><th>Utilization</th><th>Status</th></tr></thead>
         <tbody>${bodyRows}</tbody>
@@ -2247,212 +2084,45 @@ function buildWarehouseReport() {
     </div>`;
 }
 
-function exportReportPDF() {
-  if (!document.getElementById('report-output')?.innerHTML.trim()) {
-    showReport(_currentReport);
-  }
-  // Hide everything except the reports page, print, then restore
-  const sidebar  = document.querySelector('.sidebar');
-  const topbar   = document.querySelector('.topbar');
-  const allPages = document.querySelectorAll('.page');
-  const rptPage  = document.getElementById('page-reports');
-
-  // Inject print-only styles
-  const style = document.createElement('style');
-  style.id = 'print-override';
-  style.textContent = `
-    @media print {
-      body { overflow: visible !important; height: auto !important; background: #fff !important; }
-      .sidebar, .topbar, .quick-actions, #page-reports .section-title { display: none !important; }
-      .main    { overflow: visible !important; }
-      .content { display: none !important; padding: 0 !important; }
-      #page-reports { display: block !important; padding: 20px !important; }
-      #print-header { display: block !important; }
-      * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-    }
-  `;
-  document.head.appendChild(style);
-
-  // Inject a print header (hidden on screen, visible on print)
-  const header = document.createElement('div');
-  header.id = 'print-header';
-  header.style.display = 'none';
-  const title = { stock: 'Stock Report', movement: 'Movement Report', warehouse: 'Warehouse Report' }[_currentReport] || 'Report';
-  header.innerHTML = `
-    <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px;">
-      <div style="width:36px;height:36px;background:#2563eb;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:17px;">🏗</div>
-      <div>
-        <div style="font-size:18px;font-weight:800;color:#0f172a;">WareSys — ${title}</div>
-        <div style="font-size:11px;color:#64748b;">Generated on ${new Date().toLocaleString('en-IN')}</div>
-      </div>
-    </div>
-    <hr style="border:none;border-top:2px solid #e2e6f0;margin-bottom:16px;"/>
-  `;
-  rptPage.insertBefore(header, rptPage.firstChild);
-
-  window.print();
-
-  // Cleanup after print dialog closes
-  document.head.removeChild(style);
-  rptPage.removeChild(header);
-}
-
 function exportReportCSV() {
-  if (!_currentReportData.length) { showReport(_currentReport); }
-  if (!_currentReportData.length) { showToast('⚠ Open a report first before exporting.'); return; }
-  const csv  = _currentReportData.map(row => row.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  if (!_currentReportData.length) { showToast('⚠ Open a report first.'); return; }
+  const csv  = _currentReportData.map(row => row.map(c => `"${String(c||'').replace(/"/g,'""')}"`).join(',')).join('\n');
   const blob = new Blob([csv], { type: 'text/csv' });
   const url  = URL.createObjectURL(blob);
   const a    = document.createElement('a');
   a.href = url; a.download = `${_currentReport}-report-${new Date().toISOString().slice(0,10)}.csv`;
   a.click(); URL.revokeObjectURL(url);
-  showToast(`✅ ${_currentReport} report exported as CSV`);
+  showToast(`✅ Exported as CSV`);
 }
 
-// ── TRANSFER STOCK ───────────────────────────────────────
-function confirmTransfer() {
-  const productName = document.getElementById('tr-product').value;
-  const qty         = parseInt(document.getElementById('tr-qty').value);
-  const fromWh      = document.getElementById('tr-from').value;
-  const toWh        = document.getElementById('tr-to').value;
-  const fromBin     = document.getElementById('tr-from-bin').value.trim() || '—';
-  const toBin       = document.getElementById('tr-to-bin').value.trim() || '—';
-  const errEl       = document.getElementById('tr-error');
-  errEl.style.display = 'none';
-
-  if (!productName) {
-    errEl.textContent = '⚠ Please select a product.'; errEl.style.display = 'block'; return;
-  }
-  if (!qty || qty <= 0) {
-    errEl.textContent = '⚠ Please enter a valid quantity.'; errEl.style.display = 'block'; return;
-  }
-  if (fromWh === toWh) {
-    errEl.textContent = '⚠ From and To warehouses must be different.'; errEl.style.display = 'block'; return;
-  }
-
-  // Resolve warehouse codes using the helper
-  const fromCode   = getWhCode(fromWh);
-  const toCode     = getWhCode(toWh);
-  let   toCapacity = 0;
-  document.querySelectorAll('#wh-table tbody tr').forEach(row => {
-    if (row.dataset.wh === toCode)
-      toCapacity = parseInt((row.dataset.bins || row.cells[4]?.textContent || '0').replace(/,/g,'')) || 0;
-  });
-
-  // Find the product row in inventory matching the FROM warehouse
-  const invRows = document.querySelectorAll('#page-inventory tbody tr');
-  let sourceRow = null;
-  for (let r of invRows) {
-    const name = r.cells[0]?.querySelector('strong')?.textContent?.trim() || '';
-    const wh   = (r.dataset.wh || r.cells[2]?.textContent || '').trim();
-    if (name === productName && wh === fromCode) { sourceRow = r; break; }
-  }
-
-  // If not found by warehouse match, fall back to product name only
-  if (!sourceRow) {
-    for (let r of invRows) {
-      const name = r.cells[0]?.querySelector('strong')?.textContent?.trim() || '';
-      if (name === productName) { sourceRow = r; break; }
-    }
-  }
-
-  if (!sourceRow) {
-    errEl.textContent = `⚠ "${productName}" not found in inventory.`; errEl.style.display = 'block'; return;
-  }
-
-  const currentQty = parseInt((sourceRow.cells[5]?.textContent || '0').replace(/,/g, '')) || 0;
-  if (qty > currentQty) {
-    errEl.textContent = `⚠ Only ${currentQty.toLocaleString()} units available in ${fromCode}.`; errEl.style.display = 'block'; return;
-  }
-
-  // Check destination capacity
-  let toCurrentUnits = 0;
-  document.querySelectorAll('#page-inventory tbody tr').forEach(r => {
-    const wh  = (r.dataset.wh || r.cells[2]?.textContent || '').trim();
-    const q   = parseInt((r.cells[5]?.textContent || '0').replace(/,/g,'')) || 0;
-    if (wh === toCode) toCurrentUnits += q;
-  });
-  const toSpace = toCapacity - toCurrentUnits;
-  if (toCapacity > 0 && qty > toSpace) {
-    errEl.textContent = toSpace <= 0
-      ? `🚫 "${toWh}" is full — no space available.`
-      : `🚫 "${toWh}" only has ${toSpace.toLocaleString()} units of space remaining.`;
-    errEl.style.display = 'block'; return;
-  }
-
-  // ── Deduct from source row ──
-  const newFromQty = currentQty - qty;
-  sourceRow.cells[5].textContent = newFromQty.toLocaleString();
-  const fromStatus = sourceRow.cells[6];
-  if (newFromQty <= 0)        fromStatus.innerHTML = '<span class="badge badge-out">OUT</span>';
-  else if (newFromQty <= 20)  fromStatus.innerHTML = '<span class="badge badge-low">LOW</span>';
-  else if (newFromQty >= 500) fromStatus.innerHTML = '<span class="badge badge-warn">OVER</span>';
-  else                        fromStatus.innerHTML = '<span class="badge badge-ok">OK</span>';
-  if (newFromQty <= 0) { sourceRow.style.opacity = '0.5'; }
-
-  // ── Add to destination row (find existing or create new) ──
-  let destRow = null;
-  for (let r of invRows) {
-    const name = r.cells[0]?.querySelector('strong')?.textContent?.trim() || '';
-    const wh   = (r.dataset.wh || r.cells[2]?.textContent || '').trim();
-    if (name === productName && wh === toCode) { destRow = r; break; }
-  }
-
-  if (destRow) {
-    const newToQty = (parseInt((destRow.cells[5]?.textContent || '0').replace(/,/g,'')) || 0) + qty;
-    destRow.cells[5].textContent = newToQty.toLocaleString();
-    const toStatus = destRow.cells[6];
-    if (newToQty <= 20)       toStatus.innerHTML = '<span class="badge badge-low">LOW</span>';
-    else if (newToQty >= 500) toStatus.innerHTML = '<span class="badge badge-warn">OVER</span>';
-    else                      toStatus.innerHTML = '<span class="badge badge-ok">OK</span>';
-    destRow.style.opacity = '';
-  } else {
-    // Insert new inventory row for destination
-    const invTbody = document.querySelector('#page-inventory tbody');
-    const tr = document.createElement('tr');
-    tr.dataset.wh = toCode;
-    const badgeHtml = qty <= 20 ? '<span class="badge badge-low">LOW</span>' : qty >= 500 ? '<span class="badge badge-warn">OVER</span>' : '<span class="badge badge-ok">OK</span>';
-    tr.innerHTML = `
-      <td><strong>${productName}</strong></td>
-      <td class="sku">—</td>
-      <td>${toCode}</td>
-      <td>—</td>
-      <td>${toBin}</td>
-      <td>${qty.toLocaleString()}</td>
-      <td>${badgeHtml}</td>
-      <td><button class="row-out-btn" onclick="openStockOutFor('${productName}','${toCode} / ${toBin}')">📤 Stock Out</button></td>
-    `;
-    invTbody.appendChild(tr);
-  }
-
-  // ── Log to movement table ──
-  const movTbody = document.querySelector('#page-movement tbody');
-  if (movTbody) {
-    const today = new Date().toISOString().slice(0, 10);
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td class="sku">${today}</td>
-      <td><strong>${productName}</strong></td>
-      <td><span class="badge badge-xfer">XFER</span></td>
-      <td>${qty.toLocaleString()}</td>
-      <td class="sku">${fromCode}${fromBin !== '—' ? ' / ' + fromBin : ''}</td>
-      <td class="sku">${toCode}${toBin !== '—' ? ' / ' + toBin : ''}</td>
-      <td class="sku">XFR-${String(Date.now()).slice(-4)}</td>
-    `;
-    movTbody.insertBefore(tr, movTbody.firstChild);
-  }
-
-  // Reset fields
-  ['tr-product','tr-qty','tr-from-bin','tr-to-bin'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.value = '';
-  });
-
-  closeModal('transfer');
-  recalcUtilization();
-  showToast(`✅ Transferred ${qty.toLocaleString()} × ${productName} from ${fromCode} → ${toCode}`);
+function exportReportPDF() {
+  window.print();
 }
 
+// ══════════════════════════════════════════════════════════
+// INVENTORY FILTERS
+// ══════════════════════════════════════════════════════════
+
+function applyInventoryFilters() {
+  const whVal     = document.getElementById('inv-filter-wh')?.value     || '';
+  const rackVal   = document.getElementById('inv-filter-rack')?.value   || '';
+  const statusVal = document.getElementById('inv-filter-status')?.value || '';
+
+  document.querySelectorAll('#page-inventory tbody tr').forEach(row => {
+    const wh     = row.dataset.wh   || '';
+    const rack   = row.dataset.rack || (row.cells[3]?.textContent || '').trim();
+    const badge  = (row.cells[6]?.textContent || '').trim().toUpperCase();
+
+    const whMatch     = !whVal     || wh === whVal;
+    const rackMatch   = !rackVal   || rack === rackVal;
+    const statusMatch = !statusVal || badge === statusVal;
+    row.style.display = (whMatch && rackMatch && statusMatch) ? '' : 'none';
+  });
+}
+
+// ══════════════════════════════════════════════════════════
+// GLOBAL SEARCH
+// ══════════════════════════════════════════════════════════
 
 document.addEventListener('DOMContentLoaded', () => {
   const input    = document.getElementById('global-search');
@@ -2464,42 +2134,18 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!q) { dropdown.classList.remove('open'); dropdown.innerHTML = ''; return; }
     runSearch(q);
   });
-
   document.addEventListener('click', e => {
-    if (!e.target.closest('.search-dropdown-wrap')) {
-      dropdown.classList.remove('open');
-    }
+    if (!e.target.closest('.search-dropdown-wrap')) dropdown.classList.remove('open');
   });
-
   input.addEventListener('keydown', e => {
     if (e.key === 'Escape') { dropdown.classList.remove('open'); input.blur(); }
   });
 });
 
-// ── INVENTORY FILTERS ────────────────────────────────────
-function applyInventoryFilters() {
-  const whVal     = document.getElementById('inv-filter-wh')?.value || '';
-  const rackVal   = document.getElementById('inv-filter-rack')?.value || '';
-  const statusVal = document.getElementById('inv-filter-status')?.value || '';
-
-  document.querySelectorAll('#page-inventory tbody tr').forEach(row => {
-    const wh     = (row.dataset.wh || row.cells[2]?.textContent || '').trim();
-    const rack   = (row.cells[3]?.textContent || '').trim();
-    const badge  = (row.cells[6]?.textContent || '').trim().toUpperCase();
-
-    const whMatch     = !whVal     || wh === whVal;
-    const rackMatch   = !rackVal   || rack === rackVal;
-    const statusMatch = !statusVal || badge === statusVal;
-
-    row.style.display = (whMatch && rackMatch && statusMatch) ? '' : 'none';
-  });
-}
-
 function runSearch(q) {
   const dropdown = document.getElementById('search-dropdown');
-  const results  = { inventory: [], warehouses: [], movement: [] };
+  const results  = { inventory: [], movement: [] };
 
-  // Search inventory
   document.querySelectorAll('#page-inventory tbody tr').forEach(r => {
     const name  = r.cells[0]?.querySelector('strong')?.textContent || '';
     const sku   = r.cells[1]?.textContent || '';
@@ -2511,28 +2157,14 @@ function runSearch(q) {
     }
   });
 
-  // Search warehouses
-  document.querySelectorAll('#wh-table tbody tr').forEach(r => {
-    const name = r.cells[0]?.querySelector('strong')?.textContent || '';
-    const loc  = r.cells[1]?.textContent || '';
-    const util = r.cells[5]?.querySelector('.sku')?.textContent || '';
-    if (name.toLowerCase().includes(q) || loc.toLowerCase().includes(q)) {
-      results.warehouses.push({ name, loc, util });
-    }
-  });
-
-  // Search movement
   document.querySelectorAll('#page-movement tbody tr').forEach(r => {
     const prod = r.cells[1]?.querySelector('strong')?.textContent || r.cells[1]?.textContent || '';
     const type = r.cells[2]?.textContent?.trim() || '';
     const date = r.cells[0]?.textContent || '';
-    if (prod.toLowerCase().includes(q)) {
-      results.movement.push({ prod, type, date });
-    }
+    if (prod.toLowerCase().includes(q)) results.movement.push({ prod, type, date });
   });
 
-  const total = results.inventory.length + results.warehouses.length + results.movement.length;
-
+  const total = results.inventory.length + results.movement.length;
   if (total === 0) {
     dropdown.innerHTML = `<div class="sd-empty">No results for "<strong>${q}</strong>"</div>`;
     dropdown.classList.add('open');
@@ -2540,7 +2172,6 @@ function runSearch(q) {
   }
 
   let html = '';
-
   if (results.inventory.length) {
     html += `<div class="sd-section"><div class="sd-label">Inventory</div>`;
     results.inventory.slice(0, 5).forEach(i => {
@@ -2552,20 +2183,8 @@ function runSearch(q) {
     });
     html += `</div>`;
   }
-
-  if (results.warehouses.length) {
-    html += `<div class="sd-section"><div class="sd-label">Warehouses</div>`;
-    results.warehouses.slice(0, 3).forEach(w => {
-      html += `<div class="sd-item" onclick="navTo('warehouses');closeSearch()">
-        <div class="sd-item-icon">🏗</div>
-        <div><div class="sd-item-main">${w.name}</div><div class="sd-item-sub">${w.loc} · ${w.util} utilization</div></div>
-      </div>`;
-    });
-    html += `</div>`;
-  }
-
   if (results.movement.length) {
-    html += `<div class="sd-section"><div class="sd-label">Stock Movements</div>`;
+    html += `<div class="sd-section"><div class="sd-label">Movements</div>`;
     results.movement.slice(0, 3).forEach(m => {
       html += `<div class="sd-item" onclick="navTo('movement');closeSearch()">
         <div class="sd-item-icon">↕</div>
@@ -2586,7 +2205,7 @@ function goToInventory(productName) {
     document.querySelectorAll('#page-inventory tbody tr').forEach(r => {
       const name = r.cells[0]?.querySelector('strong')?.textContent || '';
       if (name === productName) {
-        r.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        r.scrollIntoView({ behavior:'smooth', block:'center' });
         r.style.transition = 'background 0.3s';
         r.style.background = '#eff6ff';
         setTimeout(() => { r.style.background = ''; }, 1800);
@@ -2602,7 +2221,10 @@ function closeSearch() {
   if (dropdown) { dropdown.classList.remove('open'); dropdown.innerHTML = ''; }
 }
 
-// ── THEME ─────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════
+// THEME
+// ══════════════════════════════════════════════════════════
+
 function setTheme(theme) {
   document.body.classList.toggle('dark', theme === 'dark');
   document.getElementById('theme-light').style.borderColor = theme === 'light' ? 'var(--accent)' : 'var(--border)';
@@ -2610,17 +2232,64 @@ function setTheme(theme) {
   localStorage.setItem('waresys-theme', theme);
 }
 
-// Apply saved theme on load
 (function() {
   const saved = localStorage.getItem('waresys-theme');
   if (saved === 'dark') setTheme('dark');
 })();
 
-function openModal(id)  { document.getElementById('modal-'+id).classList.add('open'); }
-function closeModal(id) { document.getElementById('modal-'+id).classList.remove('open'); }
+// ══════════════════════════════════════════════════════════
+// TOAST + MODAL
+// ══════════════════════════════════════════════════════════
+
+function showToast(msg) {
+  let toast = document.getElementById('app-toast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'app-toast';
+    toast.style.cssText = `
+      position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(20px);
+      background:#0f172a;color:#fff;padding:11px 22px;border-radius:10px;
+      font-size:13px;font-weight:600;font-family:var(--syne);
+      box-shadow:0 8px 24px rgba(15,23,42,0.25);z-index:999;
+      opacity:0;transition:all 0.25s ease;white-space:nowrap;`;
+    document.body.appendChild(toast);
+  }
+  toast.textContent = msg;
+  toast.style.opacity = '1';
+  toast.style.transform = 'translateX(-50%) translateY(0)';
+  clearTimeout(toast._timer);
+  toast._timer = setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateX(-50%) translateY(20px)';
+  }, 3000);
+}
+
+function openModal(id)  { document.getElementById('modal-' + id).classList.add('open'); }
+function closeModal(id) { document.getElementById('modal-' + id).classList.remove('open'); }
+
 document.querySelectorAll('.modal-overlay').forEach(o => {
-  o.addEventListener('click', e => { if (e.target===o) o.classList.remove('open'); });
+  o.addEventListener('click', e => { if (e.target === o) o.classList.remove('open'); });
 });
+
+// ── Auto-login if token exists ────────────────────────────
+(async function checkExistingSession() {
+  const token = localStorage.getItem('waresys_token');
+  if (!token) return;
+  try {
+    const { user } = await apiFetch('/auth/me');
+    document.getElementById('user-display-name').textContent = user.name;
+    document.getElementById('user-display-role').textContent = user.role;
+    document.getElementById('avatar-initials').textContent   = user.initials;
+    window.currentUserRole = user.role;
+    applyRoleAccess(user.role);
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').classList.add('show');
+    await loadDashboard();
+  } catch {
+    localStorage.removeItem('waresys_token');
+  }
+})();
+
 </script>
 </body>
 </html>
