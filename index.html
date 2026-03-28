@@ -911,7 +911,7 @@ tbody tr:last-child td { border-bottom: none; }
     <div class="form-row">
       <div class="form-group">
         <label class="form-label">Product</label>
-        <select class="form-input" id="so-product">
+        <select class="form-input" id="so-product" onchange="updateSoAvailable()">
           <option>Steel Bolt M10</option>
           <option>Hex Nut M8</option>
           <option>PVC Pipe 2in</option>
@@ -921,8 +921,14 @@ tbody tr:last-child td { border-bottom: none; }
         </select>
       </div>
       <div class="form-group">
-        <label class="form-label">Quantity</label>
-        <input class="form-input" id="so-qty" type="number" placeholder="0" min="1"/>
+        <label class="form-label" style="display:flex;align-items:center;justify-content:space-between;">
+          Quantity
+          <span id="so-available" style="font-size:10px;font-family:var(--mono);color:var(--muted);">Available: —</span>
+        </label>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <input class="form-input" id="so-qty" type="number" placeholder="0" min="1" style="flex:1"/>
+          <button type="button" onclick="setMaxQty()" style="padding:10px 14px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-family:var(--syne);font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">MAX</button>
+        </div>
       </div>
     </div>
     <div class="form-group">
@@ -1228,6 +1234,28 @@ function navTo(id) {
   showPage(id, document.querySelectorAll('.nav-item')[map[id]]);
 }
 
+function getAvailableQty(productName) {
+  for (let r of document.querySelectorAll('#page-inventory tbody tr')) {
+    const name = r.cells[0]?.querySelector('strong')?.textContent?.trim() || '';
+    if (name === productName) return parseInt((r.cells[5]?.textContent || '0').replace(/,/g,'')) || 0;
+  }
+  return 0;
+}
+
+function updateSoAvailable() {
+  const productName = document.getElementById('so-product').value;
+  const qty = getAvailableQty(productName);
+  const label = document.getElementById('so-available');
+  if (label) label.textContent = productName ? `Available: ${qty.toLocaleString()} units` : 'Available: —';
+}
+
+function setMaxQty() {
+  const productName = document.getElementById('so-product').value;
+  if (!productName) { showToast('⚠ Please select a product first.'); return; }
+  const qty = getAvailableQty(productName);
+  document.getElementById('so-qty').value = qty;
+}
+
 function openStockOutFor(productName, location) {
   const sel = document.getElementById('so-product');
   for (let opt of sel.options) {
@@ -1239,6 +1267,7 @@ function openStockOutFor(productName, location) {
   document.getElementById('so-ref').value = '';
   document.getElementById('so-notes').value = '';
   document.getElementById('stockout-error').style.display = 'none';
+  updateSoAvailable();
   openModal('stockOut');
 }
 
