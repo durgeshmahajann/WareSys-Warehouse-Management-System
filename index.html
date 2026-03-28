@@ -28,6 +28,18 @@
   --mono: 'IBM Plex Mono', monospace;
 }
 
+body.dark {
+  --bg:      #0f172a;
+  --panel:   #1e293b;
+  --panel2:  #162032;
+  --border:  #2d3f55;
+  --text:    #f1f5f9;
+  --text2:   #cbd5e1;
+  --muted:   #64748b;
+  --shadow:  0 1px 3px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.2);
+  --shadow2: 0 4px 16px rgba(0,0,0,0.4);
+}
+
 body {
   background: var(--bg);
   color: var(--text);
@@ -667,9 +679,9 @@ tbody tr:last-child td { border-bottom: none; }
     <div class="content page" id="page-inventory">
       <div class="section-title">🗂 Inventory</div>
       <div class="filter-row">
-        <select class="filter-select"><option>All Warehouses</option><option>Warehouse 1</option><option>Warehouse 2</option><option>Warehouse 3</option></select>
-        <select class="filter-select"><option>All Racks</option><option>Rack A</option><option>Rack B</option><option>Rack C</option><option>Rack D</option></select>
-        <select class="filter-select"><option>All Status</option><option>OK</option><option>Low Stock</option><option>Overstock</option></select>
+        <select class="filter-select" id="inv-filter-wh" onchange="applyInventoryFilters()"><option value="">All Warehouses</option><option value="WH1">Warehouse 1</option><option value="WH2">Warehouse 2</option><option value="WH3">Warehouse 3</option></select>
+        <select class="filter-select" id="inv-filter-rack" onchange="applyInventoryFilters()"><option value="">All Racks</option><option value="Rack A">Rack A</option><option value="Rack B">Rack B</option><option value="Rack C">Rack C</option><option value="Rack D">Rack D</option></select>
+        <select class="filter-select" id="inv-filter-status" onchange="applyInventoryFilters()"><option value="">All Status</option><option value="OK">OK</option><option value="LOW">Low Stock</option><option value="OVER">Overstock</option><option value="OUT">Out of Stock</option></select>
         <!-- ✅ Stock Out shortcut in Inventory page -->
         <button class="btn btn-danger" style="margin-left:auto" onclick="openModal('stockOut')">📤 Stock Out</button>
       </div>
@@ -746,13 +758,21 @@ tbody tr:last-child td { border-bottom: none; }
     <div class="content page" id="page-settings">
       <div class="section-title">⚙ Settings</div>
       <div class="settings-card">
-        <div class="card-header"><div class="card-title">System Preferences</div></div>
+        <div class="card-header"><div class="card-title">🎨 Appearance</div></div>
         <div class="settings-body">
-          <div class="form-group"><label class="form-label">Company Name</label><input class="form-input" value="WareSys Industries Ltd."/></div>
-          <div class="form-group"><label class="form-label">Low Stock Threshold</label><input class="form-input" value="20" type="number"/></div>
-          <div class="form-group"><label class="form-label">Default Currency</label><select class="form-input"><option>INR (₹)</option><option>USD ($)</option><option>EUR (€)</option></select></div>
-          <div class="form-group"><label class="form-label">Timezone</label><select class="form-input"><option>Asia/Kolkata (IST)</option><option>UTC</option><option>America/New_York</option></select></div>
-          <button class="btn btn-accent" style="margin-top:6px">Save Settings</button>
+          <div class="form-group">
+            <label class="form-label">Theme</label>
+            <div style="display:flex;gap:12px;margin-top:6px;">
+              <div id="theme-light" onclick="setTheme('light')" style="flex:1;padding:16px;border-radius:10px;border:2px solid var(--accent);cursor:pointer;text-align:center;background:var(--panel);transition:all 0.15s;">
+                <div style="font-size:22px;margin-bottom:6px;">☀️</div>
+                <div style="font-size:12px;font-weight:700;color:var(--text);">Light</div>
+              </div>
+              <div id="theme-dark" onclick="setTheme('dark')" style="flex:1;padding:16px;border-radius:10px;border:2px solid var(--border);cursor:pointer;text-align:center;background:var(--panel);transition:all 0.15s;">
+                <div style="font-size:22px;margin-bottom:6px;">🌙</div>
+                <div style="font-size:12px;font-weight:700;color:var(--text);">Dark</div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -882,8 +902,18 @@ tbody tr:last-child td { border-bottom: none; }
         <input class="form-input" id="si-qty" type="number" placeholder="0" min="1"/>
       </div>
       <div class="form-group">
+        <label class="form-label">SKU</label>
+        <input class="form-input" id="si-sku" placeholder="e.g. SKU-00421" style="font-family:var(--mono)"/>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Rack</label>
+        <input class="form-input" id="si-rack" placeholder="e.g. Rack A"/>
+      </div>
+      <div class="form-group">
         <label class="form-label">Bin Location</label>
-        <input class="form-input" id="si-bin" placeholder="R-A / B-01" style="font-family:var(--mono)"/>
+        <input class="form-input" id="si-bin" placeholder="e.g. Bin 03" style="font-family:var(--mono)"/>
       </div>
     </div>
     <div class="form-group" id="si-warehouse-row">
@@ -911,7 +941,8 @@ tbody tr:last-child td { border-bottom: none; }
     <div class="form-row">
       <div class="form-group">
         <label class="form-label">Product</label>
-        <select class="form-input" id="so-product" onchange="updateSoAvailable()">
+        <select class="form-input" id="so-product" onchange="updateSoWarehouses()">
+          <option value="">— Select Product —</option>
           <option>Steel Bolt M10</option>
           <option>Hex Nut M8</option>
           <option>PVC Pipe 2in</option>
@@ -921,14 +952,20 @@ tbody tr:last-child td { border-bottom: none; }
         </select>
       </div>
       <div class="form-group">
-        <label class="form-label" style="display:flex;align-items:center;justify-content:space-between;">
-          Quantity
-          <span id="so-available" style="font-size:10px;font-family:var(--mono);color:var(--muted);">Available: —</span>
-        </label>
-        <div style="display:flex;gap:8px;align-items:center;">
-          <input class="form-input" id="so-qty" type="number" placeholder="0" min="1" style="flex:1"/>
-          <button type="button" onclick="setMaxQty()" style="padding:10px 14px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-family:var(--syne);font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">MAX</button>
-        </div>
+        <label class="form-label">Warehouse</label>
+        <select class="form-input" id="so-warehouse" onchange="updateSoAvailable()">
+          <option value="">— Select Product First —</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label" style="display:flex;align-items:center;justify-content:space-between;">
+        Quantity
+        <span id="so-available" style="font-size:10px;font-family:var(--mono);color:var(--muted);">Available: —</span>
+      </label>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <input class="form-input" id="so-qty" type="number" placeholder="0" min="1" style="flex:1"/>
+        <button type="button" onclick="setMaxQty()" style="padding:10px 14px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-family:var(--syne);font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">MAX</button>
       </div>
     </div>
     <div class="form-group">
@@ -1234,38 +1271,89 @@ function navTo(id) {
   showPage(id, document.querySelectorAll('.nav-item')[map[id]]);
 }
 
-function getAvailableQty(productName) {
+function updateSoWarehouses() {
+  const productName = document.getElementById('so-product').value;
+  const whSel       = document.getElementById('so-warehouse');
+  whSel.innerHTML   = '';
+
+  if (!productName) {
+    whSel.innerHTML = '<option value="">— Select Product First —</option>';
+    document.getElementById('so-available').textContent = 'Available: —';
+    return;
+  }
+
+  // Find all inventory rows for this product with qty > 0
+  const matches = [];
+  document.querySelectorAll('#page-inventory tbody tr').forEach(row => {
+    const name = row.cells[0]?.querySelector('strong')?.textContent?.trim() || '';
+    const qty  = parseInt((row.cells[5]?.textContent || '0').replace(/,/g,'')) || 0;
+    const wh   = (row.dataset.wh || row.cells[2]?.textContent || '').trim();
+    if (name === productName && qty > 0) matches.push({ wh, qty });
+  });
+
+  if (!matches.length) {
+    whSel.innerHTML = '<option value="">— Out of Stock —</option>';
+    document.getElementById('so-available').textContent = 'Available: 0 units';
+    return;
+  }
+
+  matches.forEach(m => {
+    const opt = document.createElement('option');
+    opt.value = m.wh;
+    opt.textContent = `${m.wh} — ${m.qty.toLocaleString()} units`;
+    whSel.appendChild(opt);
+  });
+
+  updateSoAvailable();
+}
+
+function getAvailableQty(productName, whCode) {
   for (let r of document.querySelectorAll('#page-inventory tbody tr')) {
     const name = r.cells[0]?.querySelector('strong')?.textContent?.trim() || '';
-    if (name === productName) return parseInt((r.cells[5]?.textContent || '0').replace(/,/g,'')) || 0;
+    const wh   = (r.dataset.wh || r.cells[2]?.textContent || '').trim();
+    if (name === productName && (!whCode || wh === whCode))
+      return parseInt((r.cells[5]?.textContent || '0').replace(/,/g,'')) || 0;
   }
   return 0;
 }
 
 function updateSoAvailable() {
   const productName = document.getElementById('so-product').value;
-  const qty = getAvailableQty(productName);
-  const label = document.getElementById('so-available');
+  const whCode      = document.getElementById('so-warehouse')?.value || '';
+  const qty         = getAvailableQty(productName, whCode);
+  const label       = document.getElementById('so-available');
   if (label) label.textContent = productName ? `Available: ${qty.toLocaleString()} units` : 'Available: —';
 }
 
 function setMaxQty() {
   const productName = document.getElementById('so-product').value;
+  const whCode      = document.getElementById('so-warehouse')?.value || '';
   if (!productName) { showToast('⚠ Please select a product first.'); return; }
-  const qty = getAvailableQty(productName);
+  const qty = getAvailableQty(productName, whCode);
   document.getElementById('so-qty').value = qty;
 }
 
 function openStockOutFor(productName, location) {
   const sel = document.getElementById('so-product');
   for (let opt of sel.options) {
-    if (opt.text === productName) { sel.value = opt.value; break; }
+    if (opt.text === productName || opt.value === productName) { sel.value = opt.value; break; }
   }
-  document.getElementById('so-location').value = location;
-  document.getElementById('so-qty').value = '';
-  document.getElementById('so-customer').value = '';
-  document.getElementById('so-ref').value = '';
-  document.getElementById('so-notes').value = '';
+  updateSoWarehouses();
+
+  // Try to pre-select the warehouse from the location string
+  const whMatch = location.match(/WH\d+/);
+  if (whMatch) {
+    const whSel = document.getElementById('so-warehouse');
+    for (let opt of whSel.options) {
+      if (opt.value === whMatch[0]) { whSel.value = opt.value; break; }
+    }
+  }
+
+  document.getElementById('so-location').value   = location;
+  document.getElementById('so-qty').value         = '';
+  document.getElementById('so-customer').value    = '';
+  document.getElementById('so-ref').value         = '';
+  document.getElementById('so-notes').value       = '';
   document.getElementById('stockout-error').style.display = 'none';
   updateSoAvailable();
   openModal('stockOut');
@@ -1273,74 +1361,56 @@ function openStockOutFor(productName, location) {
 
 function confirmStockOut() {
   const productName = document.getElementById('so-product').value;
+  const whCode      = document.getElementById('so-warehouse')?.value || '';
   const qtyOut      = parseInt(document.getElementById('so-qty').value);
   const errEl       = document.getElementById('stockout-error');
-
   errEl.style.display = 'none';
 
+  if (!productName) {
+    errEl.textContent = '⚠ Please select a product.';
+    errEl.style.display = 'block'; return;
+  }
+  if (!whCode) {
+    errEl.textContent = '⚠ Please select a warehouse.';
+    errEl.style.display = 'block'; return;
+  }
   if (!qtyOut || qtyOut <= 0) {
     errEl.textContent = '⚠ Please enter a valid quantity to dispatch.';
-    errEl.style.display = 'block';
-    return;
+    errEl.style.display = 'block'; return;
   }
 
-  // Find the matching row in the inventory table
+  // Find the matching row — product AND warehouse must match
   const invRows = document.querySelectorAll('#page-inventory tbody tr');
   let matched = false;
 
   for (let row of invRows) {
     const nameCell = row.querySelector('td:first-child strong');
     if (!nameCell || nameCell.textContent.trim() !== productName) continue;
+    const rowWh = (row.dataset.wh || row.cells[2]?.textContent || '').trim();
+    if (rowWh !== whCode) continue;
 
-    // Read current qty (5th td, index 5)
-    const qtyCell = row.cells[5];
+    const qtyCell    = row.cells[5];
     const currentQty = parseInt(qtyCell.textContent.replace(/,/g, ''));
 
     if (qtyOut > currentQty) {
-      errEl.textContent = `⚠ Cannot dispatch ${qtyOut} units — only ${currentQty} in stock.`;
-      errEl.style.display = 'block';
-      return;
+      errEl.textContent = `⚠ Cannot dispatch ${qtyOut} units — only ${currentQty.toLocaleString()} in stock at ${whCode}.`;
+      errEl.style.display = 'block'; return;
     }
 
     const newQty = currentQty - qtyOut;
     qtyCell.textContent = newQty.toLocaleString();
 
-    // Update status badge (7th td, index 6)
     const statusCell = row.cells[6];
     let newBadge = '';
     if (newQty === 0) {
       newBadge = '<span class="badge badge-out">OUT</span>';
-      // Grey out the row
       row.style.opacity = '0.5';
-      row.querySelector('.row-out-btn').disabled = true;
-      row.querySelector('.row-out-btn').textContent = '✓ Out of Stock';
-      row.querySelector('.row-out-btn').style.pointerEvents = 'none';
-    } else if (newQty <= 20) {
-      newBadge = '<span class="badge badge-low">LOW</span>';
-    } else if (newQty >= 500) {
-      newBadge = '<span class="badge badge-warn">OVER</span>';
-    } else {
-      newBadge = '<span class="badge badge-ok">OK</span>';
-    }
+      const btn = row.querySelector('.row-out-btn');
+      if (btn) { btn.disabled = true; btn.textContent = '✓ Out of Stock'; btn.style.pointerEvents = 'none'; }
+    } else if (newQty <= 20)  newBadge = '<span class="badge badge-low">LOW</span>';
+    else if (newQty >= 500)   newBadge = '<span class="badge badge-warn">OVER</span>';
+    else                      newBadge = '<span class="badge badge-ok">OK</span>';
     statusCell.innerHTML = newBadge;
-
-    // Also update the dashboard inventory overview if the product is shown there
-    const dashRows = document.querySelectorAll('#page-dashboard tbody tr');
-    for (let drow of dashRows) {
-      const dn = drow.querySelector('td:first-child div[style]');
-      if (dn && dn.textContent.trim() === productName) {
-        const dQtySpan = drow.querySelector('.qty-bar-wrap span');
-        if (dQtySpan) dQtySpan.textContent = newQty.toLocaleString();
-        const dFill = drow.querySelector('.qty-bar-fill');
-        if (dFill) {
-          const pct = Math.min(100, Math.round((newQty / Math.max(newQty + qtyOut, 1)) * parseInt(dFill.style.width)));
-          dFill.style.width = pct + '%';
-        }
-        const dStatus = drow.cells[3];
-        if (dStatus) dStatus.innerHTML = newBadge;
-        break;
-      }
-    }
 
     matched = true;
     break;
@@ -1352,10 +1422,32 @@ function confirmStockOut() {
     return;
   }
 
+  // Log to movement table
+  const movTbody = document.querySelector('#page-movement tbody');
+  if (movTbody) {
+    const today = new Date().toISOString().slice(0, 10);
+    const tr = document.createElement('tr');
+    const ref = document.getElementById('so-ref').value.trim() || `OUT-${String(Date.now()).slice(-4)}`;
+    tr.innerHTML = `
+      <td class="sku">${today}</td>
+      <td><strong>${productName}</strong></td>
+      <td><span class="badge badge-out">OUT</span></td>
+      <td>-${qtyOut.toLocaleString()}</td>
+      <td class="sku">${whCode}</td>
+      <td>—</td>
+      <td class="sku">${ref}</td>
+    `;
+    movTbody.insertBefore(tr, movTbody.firstChild);
+  }
+
+  // Reset warehouse dropdown
+  const whSel = document.getElementById('so-warehouse');
+  if (whSel) whSel.innerHTML = '<option value="">— Select Product First —</option>';
+  document.getElementById('so-available').textContent = 'Available: —';
+
   closeModal('stockOut');
   recalcUtilization();
-  // Show a brief toast confirmation
-  showToast(`✅ Dispatched ${qtyOut} × ${productName} successfully`);
+  showToast(`✅ Dispatched ${qtyOut.toLocaleString()} × ${productName} from ${whCode}`);
 }
 
 function showToast(msg) {
@@ -1382,6 +1474,21 @@ function showToast(msg) {
   }, 3000);
 }
 
+// ── WAREHOUSE CODE HELPER ────────────────────────────────
+// Single source of truth: WH code = "WH" + (1-based row index in warehouse table)
+// Stored as data-wh on every warehouse table row on creation/lookup.
+function getWhCode(warehouseName) {
+  let code = '';
+  document.querySelectorAll('#wh-table tbody tr').forEach((row, idx) => {
+    const nameEl = row.cells[0]?.querySelector('strong');
+    if (!nameEl) return;
+    const rowCode = 'WH' + (idx + 1);
+    row.dataset.wh = rowCode; // stamp it every time so it's always current
+    if (nameEl.textContent.trim() === warehouseName) code = rowCode;
+  });
+  return code || warehouseName.replace('Warehouse ', 'WH').replace(/\s/g, '');
+}
+
 // ── UTILIZATION ENGINE ───────────────────────────────────
 // Utilization % = total inventory units in warehouse / total bin capacity
 // If a warehouse has 1000 bins and 1000 units stocked → 100%
@@ -1389,14 +1496,15 @@ function showToast(msg) {
 function recalcUtilization() {
   const whData = {};
 
-  // Seed totals from warehouse table
-  document.querySelectorAll('#wh-table tbody tr').forEach(row => {
+  // Seed totals from warehouse table — use row index as stable whCode
+  document.querySelectorAll('#wh-table tbody tr').forEach((row, idx) => {
     const nameEl = row.cells[0]?.querySelector('strong');
     if (!nameEl) return;
     const whName    = nameEl.textContent.trim();
-    const whCode    = 'WH' + whName.replace(/\D/g, '');
+    const whCode    = 'WH' + (idx + 1);
+    row.dataset.wh  = whCode; // keep stamped
     const totalBins = parseInt((row.dataset.bins || row.cells[4]?.textContent || '0').replace(/,/g,'')) || 1;
-    whData[whCode] = { name: whName, totalBins, occupied: 0, row };
+    whData[whCode]  = { name: whName, totalBins, occupied: 0, row };
   });
 
   // Sum total inventory quantity per warehouse (units = bins used)
@@ -1606,6 +1714,7 @@ function confirmAddWarehouse() {
   tr.dataset.racks    = totalRacks;
   tr.dataset.bins     = totalBins;
   tr.dataset.util     = 0;
+  tr.dataset.wh       = whCode;
   tr.innerHTML = `
     <td><strong>${name}</strong></td>
     <td class="sku">${location}</td>
@@ -1666,14 +1775,16 @@ function confirmAddWarehouse() {
     }
   });
 
-  // Also update inventory filter dropdown
-  document.querySelectorAll('.filter-select').forEach(sel => {
-    if (Array.from(sel.options).some(o => o.text === 'Warehouse 1')) {
+  // Also update inventory warehouse filter dropdown
+  const invWhFilter = document.getElementById('inv-filter-wh');
+  if (invWhFilter) {
+    if (!Array.from(invWhFilter.options).some(o => o.value === whCode)) {
       const opt = document.createElement('option');
+      opt.value = whCode;
       opt.textContent = name;
-      sel.appendChild(opt);
+      invWhFilter.appendChild(opt);
     }
-  });
+  }
 
   // Clear fields
   ['wh-name','wh-location','wh-sections','wh-racks','wh-bins'].forEach(id => {
@@ -1831,22 +1942,19 @@ function confirmStockIn() {
   }
 
   const warehouse = document.getElementById('si-warehouse').value;
-  const bin       = document.getElementById('si-bin').value || '—';
+  const bin       = document.getElementById('si-bin').value.trim() || '—';
+  const rack      = document.getElementById('si-rack').value.trim() || '—';
+  const sku       = document.getElementById('si-sku').value.trim() || '—';
 
-  // ── CAPACITY CHECK ────────────────────────────────────────
-  // Find the warehouse row and get its total bin capacity
-  const whCode = warehouse.replace('Warehouse ', 'WH').replace(/\s/g, '');
-  let totalBins = 0;
+  // ── RESOLVE WAREHOUSE CODE ────────────────────────────────
+  const whCode   = getWhCode(warehouse);
+  let   totalBins = 0;
   document.querySelectorAll('#wh-table tbody tr').forEach(row => {
-    const nameEl = row.cells[0]?.querySelector('strong');
-    if (!nameEl) return;
-    const rowCode = 'WH' + nameEl.textContent.replace(/\D/g, '');
-    if (rowCode === whCode) {
+    if (row.dataset.wh === whCode)
       totalBins = parseInt((row.dataset.bins || row.cells[4]?.textContent || '0').replace(/,/g,'')) || 0;
-    }
   });
 
-  // Sum units already in this warehouse
+  // ── CAPACITY CHECK ─────────────────────────────────────────
   let currentUnits = 0;
   document.querySelectorAll('#page-inventory tbody tr').forEach(invRow => {
     const invWh = (invRow.dataset.wh || invRow.cells[2]?.textContent || '').trim();
@@ -1862,10 +1970,10 @@ function confirmStockIn() {
     errEl.style.display = 'block';
     return;
   }
-  // ─────────────────────────────────────────────────────────
+  // ───────────────────────────────────────────────────────────
 
   // ── UPDATE INVENTORY TABLE ───────────────────────────────
-  const whCode2   = warehouse.replace('Warehouse ', 'WH').replace(/\s/g, '');
+  const whCode2   = whCode;
   const invTbody  = document.querySelector('#page-inventory tbody');
   const invRows   = invTbody ? invTbody.querySelectorAll('tr') : [];
   let   matched   = false;
@@ -1874,16 +1982,28 @@ function confirmStockIn() {
     const nameCell = row.querySelector('td:first-child strong');
     if (!nameCell || nameCell.textContent.trim() !== productName) continue;
 
+    // Must also match the same warehouse — same product in a different WH gets a new row
+    const rowWh = (row.dataset.wh || row.cells[2]?.textContent || '').trim();
+    if (rowWh && rowWh !== '—' && rowWh !== whCode2) continue;
+
     matched = true;
     const qtyCell = row.cells[5];
     const newQty  = (parseInt(qtyCell.textContent.replace(/,/g,'')) || 0) + qty;
     qtyCell.textContent = newQty.toLocaleString();
 
-    // Update warehouse & bin if they were blank
-    if (!row.cells[2].textContent.trim() || row.cells[2].textContent.trim() === '—') {
-      row.cells[2].textContent = whCode2;
-      row.dataset.wh = whCode2;
+    // Stamp SKU if blank (cells[1])
+    if (!row.cells[1].textContent.trim() || row.cells[1].textContent.trim() === '—') {
+      row.cells[1].textContent = sku; row.cells[1].className = 'sku';
     }
+    // Stamp warehouse if blank (cells[2])
+    if (!row.cells[2].textContent.trim() || row.cells[2].textContent.trim() === '—') {
+      row.cells[2].textContent = whCode2; row.dataset.wh = whCode2;
+    }
+    // Stamp rack if blank (cells[3])
+    if (!row.cells[3].textContent.trim() || row.cells[3].textContent.trim() === '—') {
+      row.cells[3].textContent = rack;
+    }
+    // Stamp bin if blank (cells[4])
     if (!row.cells[4].textContent.trim() || row.cells[4].textContent.trim() === '—') {
       row.cells[4].textContent = bin;
     }
@@ -1894,7 +2014,7 @@ function confirmStockIn() {
       rowBtn.disabled = false;
       rowBtn.textContent = '📤 Stock Out';
       rowBtn.style.pointerEvents = '';
-      rowBtn.onclick = () => openStockOutFor(productName, `${whCode2} / ${bin}`);
+      rowBtn.onclick = () => openStockOutFor(productName, `${whCode2} / ${rack} / ${bin}`);
     }
     row.style.opacity = '';
 
@@ -1921,13 +2041,13 @@ function confirmStockIn() {
     tr.dataset.wh = whCode2;
     tr.innerHTML = `
       <td><strong>${productName}</strong></td>
-      <td class="sku">—</td>
+      <td class="sku">${sku}</td>
       <td>${whCode2}</td>
-      <td>—</td>
+      <td>${rack}</td>
       <td>${bin}</td>
       <td>${qty.toLocaleString()}</td>
       <td>${badgeHtml}</td>
-      <td><button class="row-out-btn" onclick="openStockOutFor('${productName}','${whCode2} / ${bin}')">📤 Stock Out</button></td>
+      <td><button class="row-out-btn" onclick="openStockOutFor('${productName}','${whCode2} / ${rack} / ${bin}')">📤 Stock Out</button></td>
     `;
     invTbody.appendChild(tr);
   }
@@ -1950,8 +2070,10 @@ function confirmStockIn() {
   }
 
   // Reset fields
-  document.getElementById('si-qty').value = '';
-  document.getElementById('si-bin').value = '';
+  document.getElementById('si-qty').value  = '';
+  document.getElementById('si-bin').value  = '';
+  document.getElementById('si-rack').value = '';
+  document.getElementById('si-sku').value  = '';
 
   closeModal('stockIn');
   recalcUtilization();
@@ -2066,7 +2188,7 @@ function buildWarehouseReport() {
   whRows.forEach(r => {
     const name     = r.cells[0]?.querySelector('strong')?.textContent || '—';
     const location = r.cells[1]?.textContent || '—';
-    const whCode   = 'WH' + name.replace(/\D/g,'');
+    const whCode   = getWhCode(name);
     const capacity = parseInt((r.dataset.bins || r.cells[4]?.textContent || '0').replace(/,/g,'')) || 0;
     stats[whCode]  = { name, location, capacity, units: 0, skus: 0 };
   });
@@ -2208,8 +2330,14 @@ function confirmTransfer() {
     errEl.textContent = '⚠ From and To warehouses must be different.'; errEl.style.display = 'block'; return;
   }
 
-  const fromCode = fromWh.replace('Warehouse ', 'WH').replace(/\s/g, '');
-  const toCode   = toWh.replace('Warehouse ', 'WH').replace(/\s/g, '');
+  // Resolve warehouse codes using the helper
+  const fromCode   = getWhCode(fromWh);
+  const toCode     = getWhCode(toWh);
+  let   toCapacity = 0;
+  document.querySelectorAll('#wh-table tbody tr').forEach(row => {
+    if (row.dataset.wh === toCode)
+      toCapacity = parseInt((row.dataset.bins || row.cells[4]?.textContent || '0').replace(/,/g,'')) || 0;
+  });
 
   // Find the product row in inventory matching the FROM warehouse
   const invRows = document.querySelectorAll('#page-inventory tbody tr');
@@ -2238,11 +2366,7 @@ function confirmTransfer() {
   }
 
   // Check destination capacity
-  let toCapacity = 0, toCurrentUnits = 0;
-  document.querySelectorAll('#wh-table tbody tr').forEach(r => {
-    const code = 'WH' + (r.cells[0]?.querySelector('strong')?.textContent || '').replace(/\D/g, '');
-    if (code === toCode) toCapacity = parseInt((r.dataset.bins || r.cells[4]?.textContent || '0').replace(/,/g,'')) || 0;
-  });
+  let toCurrentUnits = 0;
   document.querySelectorAll('#page-inventory tbody tr').forEach(r => {
     const wh  = (r.dataset.wh || r.cells[2]?.textContent || '').trim();
     const q   = parseInt((r.cells[5]?.textContent || '0').replace(/,/g,'')) || 0;
@@ -2352,6 +2476,25 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
+// ── INVENTORY FILTERS ────────────────────────────────────
+function applyInventoryFilters() {
+  const whVal     = document.getElementById('inv-filter-wh')?.value || '';
+  const rackVal   = document.getElementById('inv-filter-rack')?.value || '';
+  const statusVal = document.getElementById('inv-filter-status')?.value || '';
+
+  document.querySelectorAll('#page-inventory tbody tr').forEach(row => {
+    const wh     = (row.dataset.wh || row.cells[2]?.textContent || '').trim();
+    const rack   = (row.cells[3]?.textContent || '').trim();
+    const badge  = (row.cells[6]?.textContent || '').trim().toUpperCase();
+
+    const whMatch     = !whVal     || wh === whVal;
+    const rackMatch   = !rackVal   || rack === rackVal;
+    const statusMatch = !statusVal || badge === statusVal;
+
+    row.style.display = (whMatch && rackMatch && statusMatch) ? '' : 'none';
+  });
+}
+
 function runSearch(q) {
   const dropdown = document.getElementById('search-dropdown');
   const results  = { inventory: [], warehouses: [], movement: [] };
@@ -2458,6 +2601,20 @@ function closeSearch() {
   if (input)    input.value = '';
   if (dropdown) { dropdown.classList.remove('open'); dropdown.innerHTML = ''; }
 }
+
+// ── THEME ─────────────────────────────────────────────────
+function setTheme(theme) {
+  document.body.classList.toggle('dark', theme === 'dark');
+  document.getElementById('theme-light').style.borderColor = theme === 'light' ? 'var(--accent)' : 'var(--border)';
+  document.getElementById('theme-dark').style.borderColor  = theme === 'dark'  ? 'var(--accent)' : 'var(--border)';
+  localStorage.setItem('waresys-theme', theme);
+}
+
+// Apply saved theme on load
+(function() {
+  const saved = localStorage.getItem('waresys-theme');
+  if (saved === 'dark') setTheme('dark');
+})();
 
 function openModal(id)  { document.getElementById('modal-'+id).classList.add('open'); }
 function closeModal(id) { document.getElementById('modal-'+id).classList.remove('open'); }
