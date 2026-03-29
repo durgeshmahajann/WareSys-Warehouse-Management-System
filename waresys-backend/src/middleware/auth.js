@@ -25,14 +25,22 @@ const protect = async (req, res, next) => {
 
 // ── Role-based access control ─────────────────────────────
 const ROLE_PERMISSIONS = {
-  WAREHOUSE_ADMIN: ['addProduct', 'stockIn', 'stockOut', 'transfer', 'addWarehouse', 'editWarehouse', 'viewReports', 'manageUsers'],
-  WAREHOUSE_STAFF: ['stockIn', 'stockOut', 'transfer'],
-  VIEWER:          ['viewReports']
+  WAREHOUSE_ADMIN: [
+    'addProduct', 'stockIn', 'stockOut', 'transfer',
+    'addWarehouse', 'editWarehouse', 'viewReports', 'manageUsers'
+  ],
+  WAREHOUSE_STAFF: [
+    'stockIn', 'stockOut', 'transfer', 'addProduct'
+  ],
+  VIEWER: ['viewReports']
 };
 
 const requireRole = (...roles) => (req, res, next) => {
   if (!roles.includes(req.user?.role)) {
-    return res.status(403).json({ success: false, message: `Access denied. Required role: ${roles.join(' or ')}` });
+    return res.status(403).json({
+      success: false,
+      message: `Access denied. Required role: ${roles.join(' or ')}`
+    });
   }
   next();
 };
@@ -40,7 +48,10 @@ const requireRole = (...roles) => (req, res, next) => {
 const requirePermission = (permission) => (req, res, next) => {
   const perms = ROLE_PERMISSIONS[req.user?.role] || [];
   if (!perms.includes(permission)) {
-    return res.status(403).json({ success: false, message: `Permission denied: ${permission}` });
+    return res.status(403).json({
+      success: false,
+      message: `Permission denied: ${permission}`
+    });
   }
   next();
 };

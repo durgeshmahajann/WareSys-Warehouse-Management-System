@@ -1,5 +1,6 @@
 const router    = require('express').Router();
-const { Inventory } = require('../db/models');
+const mongoose  = require('mongoose');
+const { Inventory, Product } = require('../db/models');
 const { protect } = require('../middleware/auth');
 
 router.use(protect);
@@ -7,9 +8,16 @@ router.use(protect);
 // GET /api/inventory?warehouse=&rack=&status=&product=
 router.get('/', async (req, res) => {
   const filter = {};
-  if (req.query.warehouse) filter.warehouse = req.query.warehouse;
-  if (req.query.rack)      filter.rack = req.query.rack;
-  if (req.query.product)   filter.product = req.query.product;
+
+  // Cast to ObjectId so Mongoose matches correctly against ref fields
+  try {
+    if (req.query.warehouse) filter.warehouse = new mongoose.Types.ObjectId(req.query.warehouse);
+    if (req.query.product)   filter.product   = new mongoose.Types.ObjectId(req.query.product);
+  } catch (e) {
+    // If the value is not a valid ObjectId (e.g. a name string), skip that filter
+  }
+
+  if (req.query.rack) filter.rack = req.query.rack;
 
   const items = await Inventory.find(filter)
     .populate('product',   'name sku category')
@@ -36,7 +44,7 @@ router.get('/', async (req, res) => {
   });
 
   if (req.query.status) {
-    result = result.filter(i => i.status === req.query.status);
+    result = result.filter(i => i.status === req.query.status.toUpperCase());
   }
 
   res.json({ success: true, count: result.length, data: result });
@@ -44,14 +52,18 @@ router.get('/', async (req, res) => {
 
 // GET /api/inventory/:id
 router.get('/:id', async (req, res) => {
-  const item = await Inventory.findById(req.params.id)
-    .populate('product', 'name sku category')
-    .populate('warehouse', 'name location');
-  if (!item) return res.status(404).json({ success: false, message: 'Inventory record not found.' });
-  res.json({ success: true, data: item });
+  try {
+    const item = await Inventory.findById(req.params.id)
+      .populate('product', 'name sku category')
+      .populate('warehouse', 'name location');
+    if (!item) return res.status(404).json({ success: false, message: 'Inventory record not found.' });
+    res.json({ success: true, data: item });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
 });
 
-// PATCH /api/inventory/:id  — edit rack, bin (SKU is on Product model)
+// PATCH /api/inventory/:id  — edit rack, bin, sku
 router.patch('/:id', async (req, res) => {
   try {
     const { rack, bin, sku } = req.body;
@@ -71,7 +83,6 @@ router.patch('/:id', async (req, res) => {
 
     // If SKU was provided, update it on the linked Product
     if (sku && item.product) {
-      const { Product } = require('../db/models');
       await Product.findByIdAndUpdate(item.product._id, { $set: { sku } });
       item.product.sku = sku; // reflect in response
     }
@@ -84,9 +95,13 @@ router.patch('/:id', async (req, res) => {
 
 // DELETE /api/inventory/:id
 router.delete('/:id', async (req, res) => {
-  const item = await Inventory.findByIdAndDelete(req.params.id);
-  if (!item) return res.status(404).json({ success: false, message: 'Inventory record not found.' });
-  res.json({ success: true, message: 'Inventory record deleted.' });
+  try {
+    const item = await Inventory.findByIdAndDelete(req.params.id);
+    if (!item) return res.status(404).json({ success: false, message: 'Inventory record not found.' });
+    res.json({ success: true, message: 'Inventory record deleted.' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
 });
 
 module.exports = router;

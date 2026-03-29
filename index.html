@@ -476,6 +476,21 @@ tbody tr:last-child td { border-bottom: none; }
 .settings-card { background: var(--panel); border: 1.5px solid var(--border); border-radius: 12px; overflow: hidden; box-shadow: var(--shadow); max-width: 500px; }
 .settings-body { padding: 20px 22px; }
 
+
+/* ── Role-based access CSS ───────────────────────────────── */
+/* VIEWER: hide all action columns */
+body.role-viewer .row-edit-btn,
+body.role-viewer .row-delete-btn,
+body.role-viewer .row-out-btn { display: none !important; }
+body.role-viewer thead th.col-actions { display: none !important; }
+body.role-viewer tbody td.col-actions { display: none !important; }
+
+/* STAFF: hide warehouse action column only */
+body.role-staff #page-warehouses .row-edit-btn,
+body.role-staff #page-warehouses .row-delete-btn { display: none !important; }
+body.role-staff #page-warehouses thead th.col-actions { display: none !important; }
+body.role-staff #page-warehouses tbody td.col-actions { display: none !important; }
+
 @keyframes fadeUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
 @keyframes fadeIn { from{opacity:0} to{opacity:1} }
 </style>
@@ -643,25 +658,25 @@ tbody tr:last-child td { border-bottom: none; }
       <div class="card">
         <div class="table-wrap">
         <table id="wh-table">
-          <thead><tr><th>Name</th><th>Location</th><th>Sections</th><th>Racks</th><th>Bins</th><th>Utilization</th><th>Status</th><th>Actions</th></tr></thead>
+          <thead><tr><th>Name</th><th>Location</th><th>Sections</th><th>Racks</th><th>Bins</th><th>Utilization</th><th>Status</th><th class="col-actions">Actions</th></tr></thead>
           <tbody>
             <tr data-sections="6" data-racks="24" data-bins="1512" data-util="82">
               <td><strong>Warehouse 1</strong></td><td class="sku">Mumbai North</td><td>6</td><td>24</td><td>1,512</td>
               <td><div class="qty-bar-wrap"><div class="qty-bar" style="max-width:80px"><div class="qty-bar-fill" style="width:82%;background:var(--accent)"></div></div><span class="sku">82%</span></div></td>
               <td><span class="badge badge-ok">ACTIVE</span></td>
-              <td style="display:flex;gap:6px"><button class="row-edit-btn" onclick="openEditWarehouse(this)">✏ Edit</button><button class="row-delete-btn" onclick="deleteWarehouse(this)">🗑 Delete</button></td>
+              <td class="col-actions" style="display:flex;gap:6px"><button class="row-edit-btn" onclick="openEditWarehouse(this)">✏ Edit</button><button class="row-delete-btn" onclick="deleteWarehouse(this)">🗑 Delete</button></td>
             </tr>
             <tr data-sections="4" data-racks="18" data-bins="1200" data-util="54">
               <td><strong>Warehouse 2</strong></td><td class="sku">Pune Central</td><td>4</td><td>18</td><td>1,200</td>
               <td><div class="qty-bar-wrap"><div class="qty-bar" style="max-width:80px"><div class="qty-bar-fill" style="width:54%;background:var(--accent4)"></div></div><span class="sku">54%</span></div></td>
               <td><span class="badge badge-ok">ACTIVE</span></td>
-              <td style="display:flex;gap:6px"><button class="row-edit-btn" onclick="openEditWarehouse(this)">✏ Edit</button><button class="row-delete-btn" onclick="deleteWarehouse(this)">🗑 Delete</button></td>
+              <td class="col-actions" style="display:flex;gap:6px"><button class="row-edit-btn" onclick="openEditWarehouse(this)">✏ Edit</button><button class="row-delete-btn" onclick="deleteWarehouse(this)">🗑 Delete</button></td>
             </tr>
             <tr data-sections="3" data-racks="12" data-bins="1000" data-util="91">
               <td><strong>Warehouse 3</strong></td><td class="sku">Nashik Depot</td><td>3</td><td>12</td><td>1,000</td>
               <td><div class="qty-bar-wrap"><div class="qty-bar" style="max-width:80px"><div class="qty-bar-fill" style="width:91%;background:var(--accent3)"></div></div><span class="sku">91%</span></div></td>
               <td><span class="badge badge-warn">NEAR FULL</span></td>
-              <td style="display:flex;gap:6px"><button class="row-edit-btn" onclick="openEditWarehouse(this)">✏ Edit</button><button class="row-delete-btn" onclick="deleteWarehouse(this)">🗑 Delete</button></td>
+              <td class="col-actions" style="display:flex;gap:6px"><button class="row-edit-btn" onclick="openEditWarehouse(this)">✏ Edit</button><button class="row-delete-btn" onclick="deleteWarehouse(this)">🗑 Delete</button></td>
             </tr>
           </tbody>
         </table>
@@ -676,14 +691,14 @@ tbody tr:last-child td { border-bottom: none; }
       <div class="card">
         <div class="table-wrap">
         <table>
-          <thead><tr><th>Name</th><th>SKU</th><th>Category</th><th>Unit</th><th>Total Qty</th><th>Status</th><th>Actions</th></tr></thead>
+          <thead><tr><th>Name</th><th>SKU</th><th>Category</th><th>Unit</th><th>Total Qty</th><th>Status</th><th class="col-actions">Actions</th></tr></thead>
           <tbody>
-            <tr><td><strong>Steel Bolt M10</strong></td><td class="sku">SKU-00421</td><td>Fasteners</td><td class="sku">pcs</td><td>320</td><td><span class="badge badge-ok">OK</span></td><td style="display:flex;gap:6px"><button class="row-edit-btn" onclick="openEditProduct(this)">✏ Edit</button><button class="row-delete-btn" onclick="deleteProduct(this)">🗑 Delete</button></td></tr>
-            <tr><td><strong>Hex Nut M8</strong></td><td class="sku">SKU-00519</td><td>Fasteners</td><td class="sku">pcs</td><td>18</td><td><span class="badge badge-low">LOW</span></td><td style="display:flex;gap:6px"><button class="row-edit-btn" onclick="openEditProduct(this)">✏ Edit</button><button class="row-delete-btn" onclick="deleteProduct(this)">🗑 Delete</button></td></tr>
-            <tr><td><strong>PVC Pipe 2in</strong></td><td class="sku">SKU-01023</td><td>Plumbing</td><td class="sku">m</td><td>540</td><td><span class="badge badge-warn">OVER</span></td><td style="display:flex;gap:6px"><button class="row-edit-btn" onclick="openEditProduct(this)">✏ Edit</button><button class="row-delete-btn" onclick="deleteProduct(this)">🗑 Delete</button></td></tr>
-            <tr><td><strong>Cable Tie 30cm</strong></td><td class="sku">SKU-00872</td><td>Electrical</td><td class="sku">pcs</td><td>1,200</td><td><span class="badge badge-ok">OK</span></td><td style="display:flex;gap:6px"><button class="row-edit-btn" onclick="openEditProduct(this)">✏ Edit</button><button class="row-delete-btn" onclick="deleteProduct(this)">🗑 Delete</button></td></tr>
-            <tr><td><strong>Rubber Gasket A</strong></td><td class="sku">SKU-00334</td><td>Seals</td><td class="sku">pcs</td><td>7</td><td><span class="badge badge-low">LOW</span></td><td style="display:flex;gap:6px"><button class="row-edit-btn" onclick="openEditProduct(this)">✏ Edit</button><button class="row-delete-btn" onclick="deleteProduct(this)">🗑 Delete</button></td></tr>
-            <tr><td><strong>Copper Elbow 45°</strong></td><td class="sku">SKU-00612</td><td>Plumbing</td><td class="sku">pcs</td><td>95</td><td><span class="badge badge-ok">OK</span></td><td style="display:flex;gap:6px"><button class="row-edit-btn" onclick="openEditProduct(this)">✏ Edit</button><button class="row-delete-btn" onclick="deleteProduct(this)">🗑 Delete</button></td></tr>
+            <tr><td><strong>Steel Bolt M10</strong></td><td class="sku">SKU-00421</td><td>Fasteners</td><td class="sku">pcs</td><td>320</td><td><span class="badge badge-ok">OK</span></td><td class="col-actions" style="display:flex;gap:6px"><button class="row-edit-btn" onclick="openEditProduct(this)">✏ Edit</button><button class="row-delete-btn" onclick="deleteProduct(this)">🗑 Delete</button></td></tr>
+            <tr><td><strong>Hex Nut M8</strong></td><td class="sku">SKU-00519</td><td>Fasteners</td><td class="sku">pcs</td><td>18</td><td><span class="badge badge-low">LOW</span></td><td class="col-actions" style="display:flex;gap:6px"><button class="row-edit-btn" onclick="openEditProduct(this)">✏ Edit</button><button class="row-delete-btn" onclick="deleteProduct(this)">🗑 Delete</button></td></tr>
+            <tr><td><strong>PVC Pipe 2in</strong></td><td class="sku">SKU-01023</td><td>Plumbing</td><td class="sku">m</td><td>540</td><td><span class="badge badge-warn">OVER</span></td><td class="col-actions" style="display:flex;gap:6px"><button class="row-edit-btn" onclick="openEditProduct(this)">✏ Edit</button><button class="row-delete-btn" onclick="deleteProduct(this)">🗑 Delete</button></td></tr>
+            <tr><td><strong>Cable Tie 30cm</strong></td><td class="sku">SKU-00872</td><td>Electrical</td><td class="sku">pcs</td><td>1,200</td><td><span class="badge badge-ok">OK</span></td><td class="col-actions" style="display:flex;gap:6px"><button class="row-edit-btn" onclick="openEditProduct(this)">✏ Edit</button><button class="row-delete-btn" onclick="deleteProduct(this)">🗑 Delete</button></td></tr>
+            <tr><td><strong>Rubber Gasket A</strong></td><td class="sku">SKU-00334</td><td>Seals</td><td class="sku">pcs</td><td>7</td><td><span class="badge badge-low">LOW</span></td><td class="col-actions" style="display:flex;gap:6px"><button class="row-edit-btn" onclick="openEditProduct(this)">✏ Edit</button><button class="row-delete-btn" onclick="deleteProduct(this)">🗑 Delete</button></td></tr>
+            <tr><td><strong>Copper Elbow 45°</strong></td><td class="sku">SKU-00612</td><td>Plumbing</td><td class="sku">pcs</td><td>95</td><td><span class="badge badge-ok">OK</span></td><td class="col-actions" style="display:flex;gap:6px"><button class="row-edit-btn" onclick="openEditProduct(this)">✏ Edit</button><button class="row-delete-btn" onclick="deleteProduct(this)">🗑 Delete</button></td></tr>
           </tbody>
         </table>
         </div>
@@ -703,14 +718,14 @@ tbody tr:last-child td { border-bottom: none; }
       <div class="card">
         <div class="table-wrap">
         <table>
-          <thead><tr><th>Product</th><th>SKU</th><th>Warehouse</th><th>Rack</th><th>Bin</th><th>Quantity</th><th>Status</th><th>Actions</th></tr></thead>
+          <thead><tr><th>Product</th><th>SKU</th><th>Warehouse</th><th>Rack</th><th>Bin</th><th>Quantity</th><th>Status</th><th class="col-actions">Actions</th></tr></thead>
           <tbody>
-            <tr data-wh="WH1"><td><strong>Steel Bolt M10</strong></td><td class="sku">SKU-00421</td><td>WH1</td><td>Rack A</td><td>Bin 03</td><td>320</td><td><span class="badge badge-ok">OK</span></td><td style="display:flex;gap:6px"><button class="row-edit-btn" onclick="openEditInventory(this)">✏ Edit</button><button class="row-out-btn" onclick="openStockOutFor('Steel Bolt M10','WH1 / Rack A / Bin 03')">📤 Stock Out</button><button class="row-delete-btn" onclick="deleteInventory(this)">🗑 Delete</button></td></tr>
-            <tr data-wh="WH1"><td><strong>Hex Nut M8</strong></td><td class="sku">SKU-00519</td><td>WH1</td><td>Rack B</td><td>Bin 07</td><td>18</td><td><span class="badge badge-low">LOW</span></td><td style="display:flex;gap:6px"><button class="row-edit-btn" onclick="openEditInventory(this)">✏ Edit</button><button class="row-out-btn" onclick="openStockOutFor('Hex Nut M8','WH1 / Rack B / Bin 07')">📤 Stock Out</button><button class="row-delete-btn" onclick="deleteInventory(this)">🗑 Delete</button></td></tr>
-            <tr data-wh="WH2"><td><strong>PVC Pipe 2in</strong></td><td class="sku">SKU-01023</td><td>WH2</td><td>Rack C</td><td>Bin 01</td><td>540</td><td><span class="badge badge-warn">OVER</span></td><td style="display:flex;gap:6px"><button class="row-edit-btn" onclick="openEditInventory(this)">✏ Edit</button><button class="row-out-btn" onclick="openStockOutFor('PVC Pipe 2in','WH2 / Rack C / Bin 01')">📤 Stock Out</button><button class="row-delete-btn" onclick="deleteInventory(this)">🗑 Delete</button></td></tr>
-            <tr data-wh="WH1"><td><strong>Cable Tie 30cm</strong></td><td class="sku">SKU-00872</td><td>WH1</td><td>Rack A</td><td>Bin 09</td><td>1,200</td><td><span class="badge badge-ok">OK</span></td><td style="display:flex;gap:6px"><button class="row-edit-btn" onclick="openEditInventory(this)">✏ Edit</button><button class="row-out-btn" onclick="openStockOutFor('Cable Tie 30cm','WH1 / Rack A / Bin 09')">📤 Stock Out</button><button class="row-delete-btn" onclick="deleteInventory(this)">🗑 Delete</button></td></tr>
-            <tr data-wh="WH3"><td><strong>Rubber Gasket A</strong></td><td class="sku">SKU-00334</td><td>WH3</td><td>Rack D</td><td>Bin 02</td><td>7</td><td><span class="badge badge-low">LOW</span></td><td style="display:flex;gap:6px"><button class="row-edit-btn" onclick="openEditInventory(this)">✏ Edit</button><button class="row-out-btn" onclick="openStockOutFor('Rubber Gasket A','WH3 / Rack D / Bin 02')">📤 Stock Out</button><button class="row-delete-btn" onclick="deleteInventory(this)">🗑 Delete</button></td></tr>
-            <tr data-wh="WH2"><td><strong>Copper Elbow 45°</strong></td><td class="sku">SKU-00612</td><td>WH2</td><td>Rack A</td><td>Bin 05</td><td>95</td><td><span class="badge badge-ok">OK</span></td><td style="display:flex;gap:6px"><button class="row-edit-btn" onclick="openEditInventory(this)">✏ Edit</button><button class="row-out-btn" onclick="openStockOutFor('Copper Elbow 45°','WH2 / Rack A / Bin 05')">📤 Stock Out</button><button class="row-delete-btn" onclick="deleteInventory(this)">🗑 Delete</button></td></tr>
+            <tr data-wh="WH1"><td><strong>Steel Bolt M10</strong></td><td class="sku">SKU-00421</td><td>WH1</td><td>Rack A</td><td>Bin 03</td><td>320</td><td><span class="badge badge-ok">OK</span></td><td class="col-actions" style="display:flex;gap:6px"><button class="row-edit-btn" onclick="openEditInventory(this)">✏ Edit</button><button class="row-out-btn" onclick="openStockOutFor('Steel Bolt M10','WH1 / Rack A / Bin 03')">📤 Stock Out</button><button class="row-delete-btn" onclick="deleteInventory(this)">🗑 Delete</button></td></tr>
+            <tr data-wh="WH1"><td><strong>Hex Nut M8</strong></td><td class="sku">SKU-00519</td><td>WH1</td><td>Rack B</td><td>Bin 07</td><td>18</td><td><span class="badge badge-low">LOW</span></td><td class="col-actions" style="display:flex;gap:6px"><button class="row-edit-btn" onclick="openEditInventory(this)">✏ Edit</button><button class="row-out-btn" onclick="openStockOutFor('Hex Nut M8','WH1 / Rack B / Bin 07')">📤 Stock Out</button><button class="row-delete-btn" onclick="deleteInventory(this)">🗑 Delete</button></td></tr>
+            <tr data-wh="WH2"><td><strong>PVC Pipe 2in</strong></td><td class="sku">SKU-01023</td><td>WH2</td><td>Rack C</td><td>Bin 01</td><td>540</td><td><span class="badge badge-warn">OVER</span></td><td class="col-actions" style="display:flex;gap:6px"><button class="row-edit-btn" onclick="openEditInventory(this)">✏ Edit</button><button class="row-out-btn" onclick="openStockOutFor('PVC Pipe 2in','WH2 / Rack C / Bin 01')">📤 Stock Out</button><button class="row-delete-btn" onclick="deleteInventory(this)">🗑 Delete</button></td></tr>
+            <tr data-wh="WH1"><td><strong>Cable Tie 30cm</strong></td><td class="sku">SKU-00872</td><td>WH1</td><td>Rack A</td><td>Bin 09</td><td>1,200</td><td><span class="badge badge-ok">OK</span></td><td class="col-actions" style="display:flex;gap:6px"><button class="row-edit-btn" onclick="openEditInventory(this)">✏ Edit</button><button class="row-out-btn" onclick="openStockOutFor('Cable Tie 30cm','WH1 / Rack A / Bin 09')">📤 Stock Out</button><button class="row-delete-btn" onclick="deleteInventory(this)">🗑 Delete</button></td></tr>
+            <tr data-wh="WH3"><td><strong>Rubber Gasket A</strong></td><td class="sku">SKU-00334</td><td>WH3</td><td>Rack D</td><td>Bin 02</td><td>7</td><td><span class="badge badge-low">LOW</span></td><td class="col-actions" style="display:flex;gap:6px"><button class="row-edit-btn" onclick="openEditInventory(this)">✏ Edit</button><button class="row-out-btn" onclick="openStockOutFor('Rubber Gasket A','WH3 / Rack D / Bin 02')">📤 Stock Out</button><button class="row-delete-btn" onclick="deleteInventory(this)">🗑 Delete</button></td></tr>
+            <tr data-wh="WH2"><td><strong>Copper Elbow 45°</strong></td><td class="sku">SKU-00612</td><td>WH2</td><td>Rack A</td><td>Bin 05</td><td>95</td><td><span class="badge badge-ok">OK</span></td><td class="col-actions" style="display:flex;gap:6px"><button class="row-edit-btn" onclick="openEditInventory(this)">✏ Edit</button><button class="row-out-btn" onclick="openStockOutFor('Copper Elbow 45°','WH2 / Rack A / Bin 05')">📤 Stock Out</button><button class="row-delete-btn" onclick="deleteInventory(this)">🗑 Delete</button></td></tr>
           </tbody>
         </table>
         </div>
@@ -1292,7 +1307,7 @@ const ROLE_PERMISSIONS = {
     actions: ['addProduct','stockIn','stockOut','transfer','addWarehouse']
   },
   WAREHOUSE_STAFF: {
-    pages:   ['dashboard','products','inventory','movement','orders'],
+    pages:   ['dashboard','warehouses','products','inventory','movement','orders'],
     actions: ['stockIn','stockOut','transfer']
   },
   VIEWER: {
@@ -1304,12 +1319,20 @@ const ROLE_PERMISSIONS = {
 function applyRoleAccess(role) {
   const perms = ROLE_PERMISSIONS[role] || { pages: [], actions: [] };
 
+  // ── Set body role class (CSS handles show/hide of action columns) ──
+  document.body.classList.remove('role-viewer', 'role-staff', 'role-admin');
+  if (role === 'VIEWER')          document.body.classList.add('role-viewer');
+  else if (role === 'WAREHOUSE_STAFF') document.body.classList.add('role-staff');
+  else                             document.body.classList.add('role-admin');
+
+  // ── Nav visibility ────────────────────────────────────────
   document.querySelectorAll('.nav-item').forEach(item => {
     const match = item.getAttribute('onclick')?.match(/'(.+?)'/);
     const page = match ? match[1] : null;
     if (page) item.style.display = perms.pages.includes(page) ? 'flex' : 'none';
   });
 
+  // ── Modal action buttons ──────────────────────────────────
   const actionMap = {
     addProduct:   ".topbar [onclick=\"openModal('addProduct')\"], .quick-actions [onclick=\"openModal('addProduct')\"], #page-products [onclick=\"openModal('addProduct')\"]",
     stockIn:      ".topbar [onclick=\"openModal('stockIn')\"], .quick-actions [onclick=\"openModal('stockIn')\"], #page-movement [onclick=\"openModal('stockIn')\"]",
@@ -1317,15 +1340,10 @@ function applyRoleAccess(role) {
     transfer:     ".topbar [onclick=\"openModal('transfer')\"], .quick-actions [onclick=\"openModal('transfer')\"], #page-movement [onclick=\"openModal('transfer')\"]",
     addWarehouse: "[onclick=\"openModal('addWarehouse')\"]"
   };
-
   Object.keys(actionMap).forEach(action => {
     document.querySelectorAll(actionMap[action]).forEach(btn => {
       btn.style.display = perms.actions.includes(action) ? '' : 'none';
     });
-  });
-
-  document.querySelectorAll('.row-out-btn').forEach(btn => {
-    btn.style.display = perms.actions.includes('stockOut') ? '' : 'none';
   });
 }
 
@@ -1485,7 +1503,7 @@ async function loadInventoryTable() {
           <td>${item.bin || '—'}</td>
           <td>${item.quantity.toLocaleString()}</td>
           <td><span class="badge ${badgeClass}">${item.status}</span></td>
-          <td style="display:flex;gap:6px">
+          <td class="col-actions" style="display:flex;gap:6px">
             <button class="row-edit-btn" onclick="openEditInventory(this)" data-id="${item._id}">✏ Edit</button>
             <button class="row-out-btn"
               onclick="openStockOutFor('${(item.product?.name||'').replace(/'/g,"\\'")}','${item.warehouse?.name || ''}','${item.product?._id}','${item.warehouse?._id}')">
@@ -1631,7 +1649,7 @@ async function loadWarehousesPage() {
           </div>
         </td>
         <td>${badgeHtml}</td>
-        <td style="display:flex;gap:6px">
+        <td class="col-actions" style="display:flex;gap:6px">
           <button class="row-edit-btn" onclick="openEditWarehouse(this)">✏ Edit</button>
           <button class="row-delete-btn" onclick="deleteWarehouse(this)">🗑 Delete</button>
         </td>`;
