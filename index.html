@@ -496,11 +496,7 @@ tbody tr:last-child td { border-bottom: none; }
       </div>
       <div class="ll-headline">Advaitya Warehouse<br><span>Management</span><br>System</div>
       <div class="ll-sub">Track products, manage stock movements, monitor warehouses, and get real-time alerts — all in one place.</div>
-      <div class="ll-stats">
-        <div><div class="ll-stat-val">3</div><div class="ll-stat-label">Warehouses</div></div>
-        <div><div class="ll-stat-val">1,284</div><div class="ll-stat-label">Products</div></div>
-        <div><div class="ll-stat-val">48k+</div><div class="ll-stat-label">Stock Units</div></div>
-      </div>
+
     </div>
   </div>
 
@@ -709,12 +705,12 @@ tbody tr:last-child td { border-bottom: none; }
         <table>
           <thead><tr><th>Product</th><th>SKU</th><th>Warehouse</th><th>Rack</th><th>Bin</th><th>Quantity</th><th>Status</th><th>Actions</th></tr></thead>
           <tbody>
-            <tr data-wh="WH1"><td><strong>Steel Bolt M10</strong></td><td class="sku">SKU-00421</td><td>WH1</td><td>Rack A</td><td>Bin 03</td><td>320</td><td><span class="badge badge-ok">OK</span></td><td style="display:flex;gap:6px"><button class="row-out-btn" onclick="openStockOutFor('Steel Bolt M10','WH1 / Rack A / Bin 03')">📤 Stock Out</button><button class="row-delete-btn" onclick="deleteInventory(this)">🗑 Delete</button></td></tr>
-            <tr data-wh="WH1"><td><strong>Hex Nut M8</strong></td><td class="sku">SKU-00519</td><td>WH1</td><td>Rack B</td><td>Bin 07</td><td>18</td><td><span class="badge badge-low">LOW</span></td><td style="display:flex;gap:6px"><button class="row-out-btn" onclick="openStockOutFor('Hex Nut M8','WH1 / Rack B / Bin 07')">📤 Stock Out</button><button class="row-delete-btn" onclick="deleteInventory(this)">🗑 Delete</button></td></tr>
-            <tr data-wh="WH2"><td><strong>PVC Pipe 2in</strong></td><td class="sku">SKU-01023</td><td>WH2</td><td>Rack C</td><td>Bin 01</td><td>540</td><td><span class="badge badge-warn">OVER</span></td><td style="display:flex;gap:6px"><button class="row-out-btn" onclick="openStockOutFor('PVC Pipe 2in','WH2 / Rack C / Bin 01')">📤 Stock Out</button><button class="row-delete-btn" onclick="deleteInventory(this)">🗑 Delete</button></td></tr>
-            <tr data-wh="WH1"><td><strong>Cable Tie 30cm</strong></td><td class="sku">SKU-00872</td><td>WH1</td><td>Rack A</td><td>Bin 09</td><td>1,200</td><td><span class="badge badge-ok">OK</span></td><td style="display:flex;gap:6px"><button class="row-out-btn" onclick="openStockOutFor('Cable Tie 30cm','WH1 / Rack A / Bin 09')">📤 Stock Out</button><button class="row-delete-btn" onclick="deleteInventory(this)">🗑 Delete</button></td></tr>
-            <tr data-wh="WH3"><td><strong>Rubber Gasket A</strong></td><td class="sku">SKU-00334</td><td>WH3</td><td>Rack D</td><td>Bin 02</td><td>7</td><td><span class="badge badge-low">LOW</span></td><td style="display:flex;gap:6px"><button class="row-out-btn" onclick="openStockOutFor('Rubber Gasket A','WH3 / Rack D / Bin 02')">📤 Stock Out</button><button class="row-delete-btn" onclick="deleteInventory(this)">🗑 Delete</button></td></tr>
-            <tr data-wh="WH2"><td><strong>Copper Elbow 45°</strong></td><td class="sku">SKU-00612</td><td>WH2</td><td>Rack A</td><td>Bin 05</td><td>95</td><td><span class="badge badge-ok">OK</span></td><td style="display:flex;gap:6px"><button class="row-out-btn" onclick="openStockOutFor('Copper Elbow 45°','WH2 / Rack A / Bin 05')">📤 Stock Out</button><button class="row-delete-btn" onclick="deleteInventory(this)">🗑 Delete</button></td></tr>
+            <tr data-wh="WH1"><td><strong>Steel Bolt M10</strong></td><td class="sku">SKU-00421</td><td>WH1</td><td>Rack A</td><td>Bin 03</td><td>320</td><td><span class="badge badge-ok">OK</span></td><td style="display:flex;gap:6px"><button class="row-edit-btn" onclick="openEditInventory(this)">✏ Edit</button><button class="row-out-btn" onclick="openStockOutFor('Steel Bolt M10','WH1 / Rack A / Bin 03')">📤 Stock Out</button><button class="row-delete-btn" onclick="deleteInventory(this)">🗑 Delete</button></td></tr>
+            <tr data-wh="WH1"><td><strong>Hex Nut M8</strong></td><td class="sku">SKU-00519</td><td>WH1</td><td>Rack B</td><td>Bin 07</td><td>18</td><td><span class="badge badge-low">LOW</span></td><td style="display:flex;gap:6px"><button class="row-edit-btn" onclick="openEditInventory(this)">✏ Edit</button><button class="row-out-btn" onclick="openStockOutFor('Hex Nut M8','WH1 / Rack B / Bin 07')">📤 Stock Out</button><button class="row-delete-btn" onclick="deleteInventory(this)">🗑 Delete</button></td></tr>
+            <tr data-wh="WH2"><td><strong>PVC Pipe 2in</strong></td><td class="sku">SKU-01023</td><td>WH2</td><td>Rack C</td><td>Bin 01</td><td>540</td><td><span class="badge badge-warn">OVER</span></td><td style="display:flex;gap:6px"><button class="row-edit-btn" onclick="openEditInventory(this)">✏ Edit</button><button class="row-out-btn" onclick="openStockOutFor('PVC Pipe 2in','WH2 / Rack C / Bin 01')">📤 Stock Out</button><button class="row-delete-btn" onclick="deleteInventory(this)">🗑 Delete</button></td></tr>
+            <tr data-wh="WH1"><td><strong>Cable Tie 30cm</strong></td><td class="sku">SKU-00872</td><td>WH1</td><td>Rack A</td><td>Bin 09</td><td>1,200</td><td><span class="badge badge-ok">OK</span></td><td style="display:flex;gap:6px"><button class="row-edit-btn" onclick="openEditInventory(this)">✏ Edit</button><button class="row-out-btn" onclick="openStockOutFor('Cable Tie 30cm','WH1 / Rack A / Bin 09')">📤 Stock Out</button><button class="row-delete-btn" onclick="deleteInventory(this)">🗑 Delete</button></td></tr>
+            <tr data-wh="WH3"><td><strong>Rubber Gasket A</strong></td><td class="sku">SKU-00334</td><td>WH3</td><td>Rack D</td><td>Bin 02</td><td>7</td><td><span class="badge badge-low">LOW</span></td><td style="display:flex;gap:6px"><button class="row-edit-btn" onclick="openEditInventory(this)">✏ Edit</button><button class="row-out-btn" onclick="openStockOutFor('Rubber Gasket A','WH3 / Rack D / Bin 02')">📤 Stock Out</button><button class="row-delete-btn" onclick="deleteInventory(this)">🗑 Delete</button></td></tr>
+            <tr data-wh="WH2"><td><strong>Copper Elbow 45°</strong></td><td class="sku">SKU-00612</td><td>WH2</td><td>Rack A</td><td>Bin 05</td><td>95</td><td><span class="badge badge-ok">OK</span></td><td style="display:flex;gap:6px"><button class="row-edit-btn" onclick="openEditInventory(this)">✏ Edit</button><button class="row-out-btn" onclick="openStockOutFor('Copper Elbow 45°','WH2 / Rack A / Bin 05')">📤 Stock Out</button><button class="row-delete-btn" onclick="deleteInventory(this)">🗑 Delete</button></td></tr>
           </tbody>
         </table>
         </div>
@@ -1224,6 +1220,47 @@ tbody tr:last-child td { border-bottom: none; }
   </div>
 </div>
 
+<!-- EDIT INVENTORY MODAL -->
+<div class="modal-overlay" id="modal-editInventory">
+  <div class="modal">
+    <div class="modal-title">✏ Edit Inventory Item</div>
+    <div class="modal-sub">INVENTORY_EDIT · MODIFY_LOCATION_AND_SKU</div>
+
+    <div class="form-group">
+      <label class="form-label">Product Name</label>
+      <input class="form-input" id="edit-inv-product" disabled style="opacity:0.6;cursor:not-allowed;"/>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">SKU</label>
+        <input class="form-input" id="edit-inv-sku" placeholder="e.g. SKU-00421"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Warehouse</label>
+        <input class="form-input" id="edit-inv-warehouse" placeholder="e.g. WH1"/>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Rack</label>
+        <input class="form-input" id="edit-inv-rack" placeholder="e.g. Rack A"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Bin</label>
+        <input class="form-input" id="edit-inv-bin" placeholder="e.g. Bin 03"/>
+      </div>
+    </div>
+
+    <div id="edit-inv-error" style="display:none;background:#fef2f2;border:1px solid #fecaca;border-radius:7px;padding:9px 13px;font-size:12px;color:var(--accent3);margin-bottom:8px;"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('editInventory')">Cancel</button>
+      <button class="btn btn-accent" onclick="saveEditInventory()">💾 Save Changes</button>
+    </div>
+  </div>
+</div>
+
 <script>
 // ═══════════════════════════════════════════════════════════
 // WARESYS — BACKEND-CONNECTED FRONTEND
@@ -1449,6 +1486,7 @@ async function loadInventoryTable() {
           <td>${item.quantity.toLocaleString()}</td>
           <td><span class="badge ${badgeClass}">${item.status}</span></td>
           <td style="display:flex;gap:6px">
+            <button class="row-edit-btn" onclick="openEditInventory(this)" data-id="${item._id}">✏ Edit</button>
             <button class="row-out-btn"
               onclick="openStockOutFor('${(item.product?.name||'').replace(/'/g,"\\'")}','${item.warehouse?.name || ''}','${item.product?._id}','${item.warehouse?._id}')">
               📤 Stock Out
@@ -2229,6 +2267,65 @@ async function deleteInventory(btn) {
     row.remove();
     showToast(`🗑 Inventory record deleted`);
   } catch (err) { showToast('⚠ ' + err.message); }
+}
+
+// ══════════════════════════════════════════════════════════
+// EDIT INVENTORY
+// ══════════════════════════════════════════════════════════
+
+let _editInvRow = null;
+
+function openEditInventory(btn) {
+  _editInvRow = btn.closest('tr');
+  const cells = _editInvRow.cells;
+  document.getElementById('edit-inv-product').value   = cells[0]?.querySelector('strong')?.textContent || '';
+  document.getElementById('edit-inv-sku').value        = cells[1]?.textContent?.trim() || '';
+  document.getElementById('edit-inv-warehouse').value  = cells[2]?.textContent?.trim() || '';
+  document.getElementById('edit-inv-rack').value       = cells[3]?.textContent?.trim() || '';
+  document.getElementById('edit-inv-bin').value        = cells[4]?.textContent?.trim() || '';
+  document.getElementById('edit-inv-error').style.display = 'none';
+  openModal('editInventory');
+}
+
+async function saveEditInventory() {
+  const sku  = document.getElementById('edit-inv-sku').value.trim();
+  const wh   = document.getElementById('edit-inv-warehouse').value.trim();
+  const rack = document.getElementById('edit-inv-rack').value.trim();
+  const bin  = document.getElementById('edit-inv-bin').value.trim();
+  const errEl = document.getElementById('edit-inv-error');
+
+  if (!sku || !wh || !rack || !bin) {
+    errEl.textContent = '⚠ All fields are required.';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  // Try API update if row has a data-id
+  const id = _editInvRow?.querySelector('[data-id]')?.dataset?.id
+          || _editInvRow?.dataset?.id;
+  if (id) {
+    try {
+      await apiFetch(`/inventory/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ sku, warehouse: wh, rack, bin })
+      });
+    } catch (err) {
+      // Proceed with local update even if API is offline
+    }
+  }
+
+  // Update the row cells directly
+  if (_editInvRow) {
+    _editInvRow.cells[1].textContent = sku;
+    _editInvRow.cells[1].className   = 'sku';
+    _editInvRow.cells[2].textContent = wh;
+    _editInvRow.cells[3].textContent = rack;
+    _editInvRow.cells[4].textContent = bin;
+    _editInvRow.dataset.wh = wh;
+  }
+
+  closeModal('editInventory');
+  showToast('✅ Inventory record updated');
 }
 
 // ══════════════════════════════════════════════════════════

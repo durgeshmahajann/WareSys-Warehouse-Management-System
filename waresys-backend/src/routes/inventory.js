@@ -51,6 +51,37 @@ router.get('/:id', async (req, res) => {
   res.json({ success: true, data: item });
 });
 
+// PATCH /api/inventory/:id  — edit rack, bin (SKU is on Product model)
+router.patch('/:id', async (req, res) => {
+  try {
+    const { rack, bin, sku } = req.body;
+
+    // Update rack/bin on the Inventory document
+    const updateFields = {};
+    if (rack !== undefined) updateFields.rack = rack;
+    if (bin  !== undefined) updateFields.bin  = bin;
+
+    const item = await Inventory.findByIdAndUpdate(
+      req.params.id,
+      { $set: updateFields },
+      { new: true, runValidators: true }
+    ).populate('product', 'name sku category').populate('warehouse', 'name location');
+
+    if (!item) return res.status(404).json({ success: false, message: 'Inventory record not found.' });
+
+    // If SKU was provided, update it on the linked Product
+    if (sku && item.product) {
+      const { Product } = require('../db/models');
+      await Product.findByIdAndUpdate(item.product._id, { $set: { sku } });
+      item.product.sku = sku; // reflect in response
+    }
+
+    res.json({ success: true, data: item });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 // DELETE /api/inventory/:id
 router.delete('/:id', async (req, res) => {
   const item = await Inventory.findByIdAndDelete(req.params.id);
