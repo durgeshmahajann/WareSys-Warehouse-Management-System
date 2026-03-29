@@ -364,7 +364,8 @@ tbody tr:last-child td { border-bottom: none; }
 .move-icon.in{background:#dbeafe} .move-icon.out{background:#fee2e2} .move-icon.xfer{background:#fef3c7}
 .move-product { font-size: 12px; font-weight: 600; color: var(--text); }
 .move-detail  { font-size: 10px; color: var(--muted); font-family: var(--mono); margin-top: 1px; }
-.move-qty { margin-left: auto; font-family: var(--mono); font-size: 12px; font-weight: 700; }
+.move-item > div:nth-child(2) { flex: 1; min-width: 0; }
+.move-qty { margin-left: auto; font-family: var(--mono); font-size: 12px; font-weight: 700; text-align: right; flex-shrink: 0; white-space: nowrap; }
 
 /* WAREHOUSE MAP */
 .warehouse-map { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; padding: 14px 18px; }
@@ -620,7 +621,7 @@ tbody tr:last-child td { border-bottom: none; }
         </div>
         <div class="card">
           <div class="card-header"><div class="card-title">↕ Recent Stock Movements</div><div class="card-action" onclick="navTo('movement')">View All →</div></div>
-          <div>
+          <div id="dash-movements-panel">
             <div class="move-item"><div class="move-icon in">📥</div><div><div class="move-product">Steel Bolt M10</div><div class="move-detail">IN · WH1/R-A/B-03 · BoltMart</div></div><div class="move-qty" style="color:var(--accent2)">+200</div></div>
             <div class="move-item"><div class="move-icon out">📤</div><div><div class="move-product">Cable Tie 30cm</div><div class="move-detail">OUT · WH1/R-A/B-09 · #OUT-0219</div></div><div class="move-qty" style="color:var(--accent3)">-80</div></div>
             <div class="move-item"><div class="move-icon xfer">🔁</div><div><div class="move-product">PVC Pipe 2in</div><div class="move-detail">TRANSFER · WH2 → WH3/R-B/B-04</div></div><div class="move-qty" style="color:var(--accent5)">~50</div></div>
@@ -1512,13 +1513,7 @@ async function loadMovementTable() {
     }
 
     // Dashboard recent movements panel
-    const panels = document.querySelectorAll('#page-dashboard .card');
-    let movPanel = null;
-    panels.forEach(p => {
-      if (p.querySelector('.card-title')?.textContent?.includes('Stock Movements')) {
-        movPanel = p.querySelector('.card-title').closest('.card').querySelector('div:last-child');
-      }
-    });
+    const movPanel = document.getElementById('dash-movements-panel');
     if (movPanel) {
       movPanel.innerHTML = '';
       data.slice(0, 5).forEach(m => {
