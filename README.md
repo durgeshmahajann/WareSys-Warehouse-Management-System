@@ -194,7 +194,7 @@ curl -X POST http://localhost:3000/api/auth/login \
 **Stock In body:**
 ```json
 {
-  "productId": "...",
+  "productId": "....",
   "warehouseId": "...",
   "supplierId": "...",
   "quantity": 200,
