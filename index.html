@@ -2069,6 +2069,7 @@ function setMaxQty() {
     return;
   }
 
+ 
   // Find available qty from inventory data
   apiFetch(`/inventory?product=${productId}&warehouse=${warehouseId}`)
     .then(({ data }) => {
